@@ -29,7 +29,7 @@ const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 
 // 默认代理配置
 const DEFAULT_PROXY_CONFIG = {
-    enabled: true,
+    enabled: false,
     type: 'http', // http, https, socks4, socks5
     host: '127.0.0.1',
     port: 7890,

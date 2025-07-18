@@ -220,28 +220,28 @@ function renderWebhooksList() {
     
     container.innerHTML = webhooks.map(webhook => `
         <div class="webhook-item">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <h6>
-                        ${webhook.name}
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                        <h6 class="mb-0 me-2">${webhook.name}</h6>
                         ${webhook.isActive ? 
-                            '<span class="badge bg-success ms-2">活跃</span>' : 
-                            '<span class="badge bg-secondary ms-2">禁用</span>'
+                            '<span class="badge bg-success">活跃</span>' : 
+                            '<span class="badge bg-secondary">禁用</span>'
                         }
-                    </h6>
-                    <p class="text-muted mb-1">${webhook.description || '无描述'}</p>
+                    </div>
+                    <p class="text-muted mb-1 small">${webhook.description || '无描述'}</p>
                     <small class="text-muted">
-                        ${webhook.createdAt} · ${webhook.messageCount || 0} 条消息
+                        创建时间: ${webhook.createdAt} · 消息数: ${webhook.messageCount || 0}
                     </small>
                 </div>
-                <div class="btn-group" role="group">
-                    <button class="btn btn-sm btn-outline-primary" onclick="testWebhook('${webhook.id}')">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="testWebhook('${webhook.id}')" title="测试Webhook">
                         测试
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="editWebhook('${webhook.id}')">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="editWebhook('${webhook.id}')" title="编辑Webhook">
                         编辑
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteWebhook('${webhook.id}')">
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteWebhook('${webhook.id}')" title="删除Webhook">
                         删除
                     </button>
                 </div>
@@ -524,6 +524,64 @@ async function sendFileMessage(webhookId) {
     return await response.json();
 }
 
+// Markdown解析函数
+function parseMarkdown(text) {
+    if (!text) return '';
+    
+    // 转义HTML特殊字符
+    text = text.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&#39;');
+    
+    // 解析Markdown格式
+    text = text
+        // 代码块 ```
+        .replace(/```([\s\S]*?)```/g, '<pre class="bg-dark text-light p-2 rounded"><code>$1</code></pre>')
+        // 行内代码 `
+        .replace(/`([^`]+)`/g, '<code class="bg-light px-1 rounded">$1</code>')
+        // 粗体 **text**
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // 斜体 *text*
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // 删除线 ~~text~~
+        .replace(/~~(.*?)~~/g, '<del>$1</del>')
+        // 下划线 __text__
+        .replace(/__(.*?)__/g, '<u>$1</u>')
+        // 链接 [text](url)
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-decoration-none">$1</a>')
+        // 图片 ![alt](url)
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="img-fluid rounded mt-2" style="max-width: 300px;">')
+        // 标题 # ## ###
+        .replace(/^### (.*$)/gm, '<h5 class="mt-2 mb-1">$1</h5>')
+        .replace(/^## (.*$)/gm, '<h4 class="mt-2 mb-1">$1</h4>')
+        .replace(/^# (.*$)/gm, '<h3 class="mt-2 mb-1">$1</h3>')
+        // 引用 > text
+        .replace(/^> (.*$)/gm, '<blockquote class="border-start border-3 ps-3 text-muted fst-italic">$1</blockquote>')
+        // 列表项 - text 或 * text
+        .replace(/^[-*] (.*$)/gm, '<li>$1</li>')
+        // 数字列表 1. text
+        .replace(/^\d+\. (.*$)/gm, '<li>$1</li>')
+        // 水平线 ---
+        .replace(/^---$/gm, '<hr class="my-2">')
+        // 换行处理：双换行变成段落，单换行变成<br>
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+    
+    // 包装列表项
+    text = text.replace(/(<li>.*?<\/li>)/gs, (match) => {
+        return '<ul class="mb-2">' + match + '</ul>';
+    });
+    
+    // 如果有段落分隔，包装在<p>标签中
+    if (text.includes('</p><p>')) {
+        text = '<p>' + text + '</p>';
+    }
+    
+    return text;
+}
+
 // 预览消息
 function previewMessage() {
     const messageType = elements.messageType.value;
@@ -537,13 +595,16 @@ function previewMessage() {
         const username = document.getElementById('messageUsername').value;
         const avatarUrl = document.getElementById('messageAvatar').value;
         
+        // 解析Markdown格式
+        const parsedContent = parseMarkdown(messageContent);
+        
         previewHTML = `
             <div class="d-flex align-items-start">
                 <img src="${avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png'}" 
                      class="rounded-circle me-3" width="40" height="40">
-                <div>
+                <div class="flex-grow-1">
                     <h6 class="mb-1">${username || 'Webhook'}</h6>
-                    <p class="mb-0">${messageContent}</p>
+                    <div class="mb-0 discord-message-content">${parsedContent}</div>
                 </div>
             </div>
         `;
@@ -553,23 +614,34 @@ function previewMessage() {
         const color = document.getElementById('embedColor').value;
         const author = document.getElementById('embedAuthor').value;
         
+        // 解析Markdown格式
+        const parsedTitle = parseMarkdown(title);
+        const parsedDescription = parseMarkdown(description);
+        const parsedAuthor = parseMarkdown(author);
+        
         previewHTML = `
             <div class="border-start" style="border-color: ${color} !important; border-width: 4px !important; padding-left: 1rem;">
-                ${author ? `<div class="fw-bold mb-2">${author}</div>` : ''}
-                ${title ? `<h6 class="mb-2">${title}</h6>` : ''}
-                ${description ? `<p class="mb-0">${description}</p>` : ''}
+                ${author ? `<div class="fw-bold mb-2 text-muted">${parsedAuthor}</div>` : ''}
+                ${title ? `<h6 class="mb-2">${parsedTitle}</h6>` : ''}
+                ${description ? `<div class="mb-0 discord-message-content">${parsedDescription}</div>` : ''}
             </div>
         `;
     } else if (messageType === 'file') {
         const fileInput = document.getElementById('fileUpload');
         const fileContent = document.getElementById('fileContent').value;
         
+        // 解析Markdown格式
+        const parsedContent = parseMarkdown(fileContent);
+        
         previewHTML = `
             <div>
-                ${fileContent ? `<p>${fileContent}</p>` : ''}
+                ${fileContent ? `<div class="mb-2 discord-message-content">${parsedContent}</div>` : ''}
                 ${fileInput.files.length ? 
-                    `<div class="alert alert-info">${fileInput.files[0].name}</div>` : 
-                    '<div class="alert alert-warning">请选择文件</div>'
+                    `<div class="alert alert-info mb-0">
+                        <i class="bi bi-file-earmark"></i> ${fileInput.files[0].name}
+                        <small class="text-muted d-block">大小: ${(fileInput.files[0].size / 1024).toFixed(1)} KB</small>
+                    </div>` : 
+                    '<div class="alert alert-warning mb-0">请选择文件</div>'
                 }
             </div>
         `;
@@ -632,37 +704,148 @@ function renderMessageHistory() {
         const webhook = webhooks.find(w => w.id === message.webhookId);
         const webhookName = webhook ? webhook.name : '未知Webhook';
         const statusClass = message.success ? 'success' : 'failed';
+        const messageType = getMessageType(message.messageData);
+        const messagePreview = getMessagePreview(message.messageData);
         
         return `
             <div class="message-item ${statusClass}">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="mb-1">${webhookName}</h6>
-                        <p class="mb-1">${getMessagePreview(message.messageData)}</p>
-                        <small class="text-muted">${message.timestamp}</small>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            <h6 class="mb-0 me-2">${webhookName}</h6>
+                            <span class="badge ${message.success ? 'bg-success' : 'bg-danger'} me-2">
+                                ${message.success ? '成功' : '失败'}
+                            </span>
+                            <span class="badge bg-light text-dark">${messageType}</span>
+                        </div>
+                        <div class="message-preview mb-2">
+                            ${messagePreview}
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> ${message.timestamp}
+                        </small>
                     </div>
-                    <span class="badge ${message.success ? 'bg-success' : 'bg-danger'}">
-                        ${message.success ? '成功' : '失败'}
-                    </span>
+                    <div class="message-actions">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="showMessageDetail('${message.id}')" title="查看详情">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
                 </div>
-                ${!message.success ? `<div class="alert alert-danger mt-2 mb-0"><small>${message.error}</small></div>` : ''}
+                ${!message.success ? `
+                    <div class="alert alert-danger mt-2 mb-0">
+                        <small><i class="bi bi-exclamation-triangle"></i> ${message.error}</small>
+                    </div>
+                ` : ''}
             </div>
         `;
     }).join('');
 }
 
+// 获取消息类型
+function getMessageType(messageData) {
+    if (messageData.embeds && messageData.embeds.length > 0) {
+        return '嵌入消息';
+    } else if (messageData.filename) {
+        return '文件消息';
+    } else if (messageData.content) {
+        return '文本消息';
+    } else {
+        return '未知类型';
+    }
+}
+
 // 获取消息预览
 function getMessagePreview(messageData) {
     if (messageData.content) {
-        return messageData.content.substring(0, 100) + (messageData.content.length > 100 ? '...' : '');
+        // 解析Markdown格式并截取预览
+        const plainText = messageData.content.replace(/[*_`~#>\[\]!-]/g, '').trim();
+        return plainText.substring(0, 120) + (plainText.length > 120 ? '...' : '');
     } else if (messageData.embeds && messageData.embeds.length > 0) {
         const embed = messageData.embeds[0];
-        return `[嵌入] ${embed.title || embed.description || '无标题'}`;
+        const title = embed.title || '';
+        const description = embed.description || '';
+        const preview = title || description || '无内容';
+        return preview.substring(0, 120) + (preview.length > 120 ? '...' : '');
     } else if (messageData.filename) {
-        return `[文件] ${messageData.filename}`;
+        return `📎 ${messageData.filename}`;
     } else {
-        return '未知消息类型';
+        return '无内容预览';
     }
+}
+
+// 显示消息详情
+function showMessageDetail(messageId) {
+    const message = messages.find(m => m.id === messageId);
+    if (!message) return;
+    
+    const webhook = webhooks.find(w => w.id === message.webhookId);
+    const webhookName = webhook ? webhook.name : '未知Webhook';
+    
+    let detailHTML = `
+        <div class="mb-3">
+            <h6>基本信息</h6>
+            <table class="table table-sm">
+                <tr><td><strong>Webhook:</strong></td><td>${webhookName}</td></tr>
+                <tr><td><strong>类型:</strong></td><td>${getMessageType(message.messageData)}</td></tr>
+                <tr><td><strong>状态:</strong></td><td>
+                    <span class="badge ${message.success ? 'bg-success' : 'bg-danger'}">
+                        ${message.success ? '发送成功' : '发送失败'}
+                    </span>
+                </td></tr>
+                <tr><td><strong>时间:</strong></td><td>${message.timestamp}</td></tr>
+            </table>
+        </div>
+    `;
+    
+    if (message.messageData.content) {
+        detailHTML += `
+            <div class="mb-3">
+                <h6>消息内容</h6>
+                <div class="bg-light p-3 rounded">
+                    <pre class="mb-0" style="white-space: pre-wrap;">${message.messageData.content}</pre>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (message.messageData.embeds && message.messageData.embeds.length > 0) {
+        const embed = message.messageData.embeds[0];
+        detailHTML += `
+            <div class="mb-3">
+                <h6>嵌入内容</h6>
+                <div class="bg-light p-3 rounded">
+                    ${embed.title ? `<div><strong>标题:</strong> ${embed.title}</div>` : ''}
+                    ${embed.description ? `<div><strong>描述:</strong> ${embed.description}</div>` : ''}
+                    ${embed.color ? `<div><strong>颜色:</strong> #${embed.color.toString(16).padStart(6, '0')}</div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (message.messageData.filename) {
+        detailHTML += `
+            <div class="mb-3">
+                <h6>文件信息</h6>
+                <div class="bg-light p-3 rounded">
+                    <div><strong>文件名:</strong> ${message.messageData.filename}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (!message.success && message.error) {
+        detailHTML += `
+            <div class="mb-3">
+                <h6>错误信息</h6>
+                <div class="alert alert-danger">
+                    ${message.error}
+                </div>
+            </div>
+        `;
+    }
+    
+    document.getElementById('messageDetailContent').innerHTML = detailHTML;
+    new bootstrap.Modal(document.getElementById('messageDetailModal')).show();
 }
 
 // 过滤消息历史
