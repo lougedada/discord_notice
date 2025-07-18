@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Webhook 管理</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .navbar {
+            background-color: #fff;
+            border-bottom: 1px solid #dee2e6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: #495057 !important;
+        }
+
+        .card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .btn-success {
+            background-color: #198754;
+            border-color: #198754;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #000;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #fff;
+            color: #0d6efd;
+            border-bottom: 2px solid #0d6efd;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0d6efd;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .webhook-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .webhook-item h6 {
+            margin-bottom: 0.5rem;
+            color: #495057;
+        }
+
+        .webhook-item .text-muted {
+            font-size: 0.9rem;
+        }
+
+        .message-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .message-item.failed {
+            border-left: 4px solid #dc3545;
+        }
+
+        .message-item.success {
+            border-left: 4px solid #198754;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .badge {
+            font-size: 0.8rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+
+        .empty-state h5 {
+            color: #495057;
+            margin-bottom: 1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-area:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #0d6efd;
+            background-color: #f0f8ff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">Discord Webhook 管理</a>
+            <span class="navbar-text">
+                <span id="currentTime"></span>
+            </span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalWebhooks">0</div>
+                <div class="stat-label">总Webhook数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalMessages">0</div>
+                <div class="stat-label">总消息数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successRate">0%</div>
+                <div class="stat-label">成功率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeWebhooks">0</div>
+                <div class="stat-label">活跃Webhook</div>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="mainTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="webhooks-tab" data-bs-toggle="tab" data-bs-target="#webhooks" type="button" role="tab">
+                                    Webhook管理
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="send-tab" data-bs-toggle="tab" data-bs-target="#send" type="button" role="tab">
+                                    发送消息
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
+                                    消息历史
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="mainTabsContent">
+                            <!-- Webhook管理 -->
+                            <div class="tab-pane fade show active" id="webhooks" role="tabpanel">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5>Webhook列表</h5>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addWebhookModal">
+                                        添加Webhook
+                                    </button>
+                                </div>
+                                <div id="webhooksList" class="loading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                    <p class="mt-2">正在加载...</p>
+                                </div>
+                            </div>
+
+                            <!-- 发送消息 -->
+                            <div class="tab-pane fade" id="send" role="tabpanel">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="sendWebhookSelect" class="form-label">选择Webhook</label>
+                                        <select class="form-select" id="sendWebhookSelect">
+                                            <option value="">请选择Webhook</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="messageType" class="form-label">消息类型</label>
+                                        <select class="form-select" id="messageType">
+                                            <option value="text">文本消息</option>
+                                            <option value="embed">嵌入消息</option>
+                                            <option value="file">文件消息</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 文本消息表单 -->
+                                <div id="textMessageForm">
+                                    <div class="mb-3">
+                                        <label for="messageContent" class="form-label">消息内容</label>
+                                        <textarea class="form-control" id="messageContent" rows="4" placeholder="输入消息内容..."></textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="messageUsername" class="form-label">用户名（可选）</label>
+                                                <input type="text" class="form-control" id="messageUsername" placeholder="自定义用户名">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="messageAvatar" class="form-label">头像URL（可选）</label>
+                                                <input type="url" class="form-control" id="messageAvatar" placeholder="https://example.com/avatar.png">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 嵌入消息表单 -->
+                                <div id="embedMessageForm" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="embedTitle" class="form-label">标题</label>
+                                        <input type="text" class="form-control" id="embedTitle" placeholder="嵌入消息标题">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="embedDescription" class="form-label">描述</label>
+                                        <textarea class="form-control" id="embedDescription" rows="3" placeholder="嵌入消息描述"></textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="embedColor" class="form-label">颜色</label>
+                                                <input type="color" class="form-control form-control-color" id="embedColor" value="#0d6efd">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="embedAuthor" class="form-label">作者</label>
+                                                <input type="text" class="form-control" id="embedAuthor" placeholder="作者名称">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 文件消息表单 -->
+                                <div id="fileMessageForm" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="fileUpload" class="form-label">选择文件</label>
+                                        <div class="file-upload-area" id="fileUploadArea">
+                                            <p class="mb-2">点击或拖拽文件到这里</p>
+                                            <small class="text-muted">最大文件大小: 8MB</small>
+                                            <input type="file" class="form-control" id="fileUpload" style="display: none;">
+                                        </div>
+                                        <div id="fileInfo" class="mt-2" style="display: none;">
+                                            <div class="alert alert-info">
+                                                <span id="fileName"></span>
+                                                <button type="button" class="btn-close float-end" id="removeFile"></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="fileContent" class="form-label">文件说明（可选）</label>
+                                        <textarea class="form-control" id="fileContent" rows="3" placeholder="文件说明文字..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-success" id="sendMessageBtn">发送消息</button>
+                                    <button class="btn btn-secondary" id="previewMessageBtn">预览</button>
+                                </div>
+
+                                <!-- 消息预览 -->
+                                <div id="messagePreview" class="mt-3 p-3 bg-light border rounded" style="display: none;">
+                                    <h6>消息预览</h6>
+                                    <div id="previewContent"></div>
+                                </div>
+                            </div>
+
+                            <!-- 消息历史 -->
+                            <div class="tab-pane fade" id="history" role="tabpanel">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5>消息历史</h5>
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select" id="historyWebhookFilter" style="width: auto;">
+                                            <option value="">所有Webhook</option>
+                                        </select>
+                                        <button class="btn btn-warning" id="clearHistoryBtn">清除历史</button>
+                                    </div>
+                                </div>
+                                <div id="messageHistory" class="loading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                    <p class="mt-2">正在加载...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- 快速操作 -->
+                <div class="card mb-3">
+                    <div class="card-header">快速操作</div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" id="quickTestBtn">测试所有Webhook</button>
+                            <button class="btn btn-success" id="refreshStatsBtn">刷新统计</button>
+                            <button class="btn btn-secondary" id="exportDataBtn">导出数据</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 代理设置 -->
+                <div class="card mb-3">
+                    <div class="card-header">代理设置</div>
+                    <div class="card-body">
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="proxyEnabled" checked>
+                            <label class="form-check-label" for="proxyEnabled">启用代理</label>
+                        </div>
+                        
+                        <div id="proxySettings">
+                            <div class="mb-3">
+                                <label for="proxyType" class="form-label">代理类型</label>
+                                <select class="form-select" id="proxyType">
+                                    <option value="http">HTTP</option>
+                                    <option value="https">HTTPS</option>
+                                    <option value="socks4">SOCKS4</option>
+                                    <option value="socks5">SOCKS5</option>
+                                </select>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-8">
+                                    <div class="mb-3">
+                                        <label for="proxyHost" class="form-label">主机</label>
+                                        <input type="text" class="form-control" id="proxyHost" placeholder="127.0.0.1">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="mb-3">
+                                        <label for="proxyPort" class="form-label">端口</label>
+                                        <input type="number" class="form-control" id="proxyPort" placeholder="7890">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">认证（可选）</label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <input type="text" class="form-control" id="proxyUsername" placeholder="用户名">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="password" class="form-control" id="proxyPassword" placeholder="密码">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="proxyUrl" class="form-label">完整URL（可选，优先级最高）</label>
+                                <input type="text" class="form-control" id="proxyUrl" placeholder="http://user:pass@127.0.0.1:7890">
+                                <div class="form-text">如果提供完整URL，将忽略上面的单独配置</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" id="saveProxyBtn">保存配置</button>
+                            <button class="btn btn-success" id="testProxyBtn">测试连接</button>
+                            <small class="text-muted">状态: <span id="proxyStatus">检查中...</span></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统状态 -->
+                <div class="card">
+                    <div class="card-header">系统状态</div>
+                    <div class="card-body text-center">
+                        <div class="mb-2">
+                            <span class="badge bg-success">运行中</span>
+                        </div>
+                        <small class="text-muted">Discord Webhook 管理系统</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加Webhook模态框 -->
+    <div class="modal fade" id="addWebhookModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加Webhook</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addWebhookForm">
+                        <div class="mb-3">
+                            <label for="webhookName" class="form-label">名称</label>
+                            <input type="text" class="form-control" id="webhookName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="webhookUrl" class="form-label">Webhook URL</label>
+                            <input type="url" class="form-control" id="webhookUrl" required 
+                                   placeholder="https://discord.com/api/webhooks/...">
+                        </div>
+                        <div class="mb-3">
+                            <label for="webhookDescription" class="form-label">描述（可选）</label>
+                            <textarea class="form-control" id="webhookDescription" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveWebhookBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑Webhook模态框 -->
+    <div class="modal fade" id="editWebhookModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑Webhook</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editWebhookForm">
+                        <input type="hidden" id="editWebhookId">
+                        <div class="mb-3">
+                            <label for="editWebhookName" class="form-label">名称</label>
+                            <input type="text" class="form-control" id="editWebhookName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editWebhookUrl" class="form-label">Webhook URL</label>
+                            <input type="url" class="form-control" id="editWebhookUrl" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editWebhookDescription" class="form-label">描述</label>
+                            <textarea class="form-control" id="editWebhookDescription" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="editWebhookActive">
+                            <label class="form-check-label" for="editWebhookActive">启用此Webhook</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="updateWebhookBtn">更新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息详情模态框 -->
+    <div class="modal fade" id="messageDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">消息详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="messageDetailContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="globalToast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">提示</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
