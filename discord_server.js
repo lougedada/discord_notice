@@ -241,17 +241,18 @@ app.get('/login', (req, res) => {
 });
 
 // 基础路由 - 需要认证
-app.get('/', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/', (req, res) => {
+  // 检查是否已登录
+  if (req.session && req.session.user) {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  } else {
+    res.redirect('/login');
+  }
 });
 
-// 静态文件服务 - 需要认证（除了登录页面）
-app.use('/public', (req, res, next) => {
-  if (req.path.includes('login')) {
-    return next();
-  }
-  requireAuth(req, res, next);
-}, express.static(path.join(__dirname, 'public')));
+// 静态文件服务 - 只允许访问登录页面相关的资源
+app.use('/app.js', requireAuth, express.static(path.join(__dirname, 'public', 'app.js')));
+app.use('/index.html', requireAuth, express.static(path.join(__dirname, 'public', 'index.html')));
 
 // 登录API
 app.post('/api/login', async (req, res) => {

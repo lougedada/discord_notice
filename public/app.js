@@ -22,11 +22,90 @@ const elements = {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-    setupEventListeners();
-    updateTime();
-    setInterval(updateTime, 1000);
+    checkAuth().then(() => {
+        initializeApp();
+        setupEventListeners();
+        updateTime();
+        setInterval(updateTime, 1000);
+    });
 });
+
+// 检查登录状态
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/user', {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('currentUser').textContent = data.user.username;
+            return true;
+        } else {
+            // 未登录，跳转到登录页面
+            window.location.href = '/login';
+            return false;
+        }
+    } catch (error) {
+        console.error('检查登录状态失败:', error);
+        window.location.href = '/login';
+        return false;
+    }
+}
+
+// 登出
+async function logout() {
+    try {
+        await fetch('/api/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        window.location.href = '/login';
+    } catch (error) {
+        console.error('登出失败:', error);
+        showToast('登出失败');
+    }
+}
+
+// 修改密码
+async function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showToast('请填写所有字段');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showToast('新密码与确认密码不匹配');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showToast('新密码长度至少6位');
+        return;
+    }
+    
+    try {
+        const response = await apiCall('/api/change-password', {
+            method: 'POST',
+            body: JSON.stringify({
+                currentPassword,
+                newPassword
+            })
+        });
+        
+        if (response.success) {
+            bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+            document.getElementById('changePasswordForm').reset();
+            showToast('密码修改成功');
+        }
+    } catch (error) {
+        showToast('修改密码失败: ' + error.message);
+    }
+}
 
 // 初始化应用
 async function initializeApp() {
@@ -64,6 +143,10 @@ function setupEventListeners() {
     document.getElementById('saveProxyBtn').addEventListener('click', saveProxyConfig);
     document.getElementById('testProxyBtn').addEventListener('click', testProxyConnection);
     document.getElementById('proxyEnabled').addEventListener('change', toggleProxySettings);
+    
+    // 用户管理
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('savePasswordBtn').addEventListener('click', changePassword);
 }
 
 // 更新时间显示
@@ -88,11 +171,19 @@ async function apiCall(url, options = {}) {
                 'Content-Type': 'application/json',
                 ...options.headers
             },
+            credentials: 'include',
             ...options
         });
         
         if (!response.ok) {
             const error = await response.json();
+            
+            // 如果是401未授权，跳转到登录页面
+            if (response.status === 401 && error.needLogin) {
+                window.location.href = '/login';
+                return;
+            }
+            
             throw new Error(error.error || `HTTP ${response.status}`);
         }
         
