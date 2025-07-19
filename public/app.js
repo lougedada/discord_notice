@@ -709,26 +709,26 @@ function renderMessageHistory() {
         
         return `
             <div class="message-item ${statusClass}">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
-                        <div class="d-flex align-items-center mb-2">
-                            <h6 class="mb-0 me-2">${webhookName}</h6>
-                            <span class="badge ${message.success ? 'bg-success' : 'bg-danger'} me-2">
-                                ${message.success ? '成功' : '失败'}
-                            </span>
-                            <span class="badge bg-light text-dark">${messageType}</span>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center">
+                                <h6 class="mb-0 me-2">${webhookName}</h6>
+                                <span class="badge ${message.success ? 'bg-success' : 'bg-danger'} me-2">
+                                    ${message.success ? '成功' : '失败'}
+                                </span>
+                                <span class="badge bg-light text-dark">${messageType}</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="showMessageDetail('${message.id}')" title="查看详情">
+                                <i class="bi bi-eye"></i>
+                            </button>
                         </div>
-                        <div class="message-preview mb-2">
+                        <div class="message-preview mb-2" onclick="showMessageDetail('${message.id}')" style="cursor: pointer;">
                             ${messagePreview}
                         </div>
                         <small class="text-muted">
                             <i class="bi bi-clock"></i> ${message.timestamp}
                         </small>
-                    </div>
-                    <div class="message-actions">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="showMessageDetail('${message.id}')" title="查看详情">
-                            <i class="bi bi-eye"></i>
-                        </button>
                     </div>
                 </div>
                 ${!message.success ? `
