@@ -97,8 +97,13 @@
             border: 1px solid #f0f0f0;
             border-radius: 8px;
             padding: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             background: white;
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .webhook-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .webhook-header {
@@ -134,16 +139,21 @@
             border: 1px solid #f0f0f0;
             border-radius: 8px;
             padding: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             background: white;
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .message-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .message-item.success {
-            border-left: 4px solid #52c41a;
+        .message-preview {
+            transition: background-color 0.2s ease;
         }
-
-        .message-item.failed {
-            border-left: 4px solid #ff4d4f;
+        
+        .message-preview:hover {
+            background-color: #f5f5f5 !important;
         }
 
         .message-header {
@@ -164,6 +174,16 @@
         .empty-state {
             text-align: center;
             padding: 40px;
+            color: #999;
+        }
+        
+        .empty-state h5 {
+            margin-bottom: 8px;
+            color: #666;
+        }
+        
+        .empty-state p {
+            margin: 0;
             color: #999;
         }
 

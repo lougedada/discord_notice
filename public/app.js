@@ -352,44 +352,64 @@ function renderWebhooksList() {
     
     if (webhooks.length === 0) {
         container.innerHTML = `
-            <div class="empty-state">
-                <h5>还没有Webhook</h5>
-                <p>点击"添加Webhook"按钮来添加第一个Webhook</p>
+            <div class="empty-state" style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 48px; margin-bottom: 16px; color: #d9d9d9;">📡</div>
+                <h5 style="margin-bottom: 8px; color: #666;">还没有Webhook</h5>
+                <p style="margin: 0; color: #999;">点击"添加Webhook"按钮来添加第一个Webhook</p>
             </div>
         `;
         return;
     }
     
-    container.innerHTML = webhooks.map(webhook => `
-        <div class="webhook-item">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center mb-2">
-                        <h6 class="mb-0 me-2">${webhook.name}</h6>
-                        ${webhook.isActive ? 
-                            '<span class="badge bg-success">活跃</span>' : 
-                            '<span class="badge bg-secondary">禁用</span>'
-                        }
+    container.innerHTML = webhooks.map(webhook => {
+        // 格式化创建时间
+        const createdTime = formatRelativeTime(webhook.createdAt);
+        const messageCount = webhook.messageCount || 0;
+        
+        return `
+        <div class="webhook-item" style="border: 1px solid #f0f0f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: white; transition: box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f1f1f;">${webhook.name}</h6>
+                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${webhook.isActive ? 'background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f;' : 'background: #f5f5f5; color: #8c8c8c; border: 1px solid #d9d9d9;'}">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; ${webhook.isActive ? 'background: #52c41a;' : 'background: #8c8c8c;'}"></span>
+                            ${webhook.isActive ? '活跃' : '禁用'}
+                        </span>
                     </div>
-                    <p class="text-muted mb-1 small">${webhook.description || '无描述'}</p>
-                    <small class="text-muted">
-                        创建时间: ${webhook.createdAt} · 消息数: ${webhook.messageCount || 0}
-                    </small>
+                    ${webhook.description ? `
+                        <p style="margin: 0 0 8px 0; color: #666; font-size: 14px; line-height: 1.4; word-break: break-all;">${webhook.description}</p>
+                    ` : ''}
+                    <div style="display: flex; align-items: center; gap: 16px; font-size: 12px; color: #999;">
+                        <span style="display: flex; align-items: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            创建于 ${createdTime}
+                        </span>
+                        <span style="display: flex; align-items: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                            </svg>
+                            ${messageCount} 条消息
+                        </span>
+                    </div>
                 </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-primary" onclick="testWebhook('${webhook.id}')" title="测试Webhook">
+                <div style="display: flex; gap: 8px; margin-left: 16px; flex-shrink: 0;">
+                    <button onclick="testWebhook('${webhook.id}')" title="测试Webhook" style="padding: 4px 12px; border: 1px solid #1890ff; background: white; color: #1890ff; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#1890ff'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#1890ff';">
                         测试
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="editWebhook('${webhook.id}')" title="编辑Webhook">
+                    <button onclick="editWebhook('${webhook.id}')" title="编辑Webhook" style="padding: 4px 12px; border: 1px solid #d9d9d9; background: white; color: #666; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f5f5f5';" onmouseout="this.style.background='white';">
                         编辑
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteWebhook('${webhook.id}')" title="删除Webhook">
+                    <button onclick="deleteWebhook('${webhook.id}')" title="删除Webhook" style="padding: 4px 12px; border: 1px solid #ff4d4f; background: white; color: #ff4d4f; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#ff4d4f'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#ff4d4f';">
                         删除
                     </button>
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 
@@ -930,9 +950,10 @@ function renderMessageHistory() {
     
     if (filteredMessages.length === 0) {
         container.innerHTML = `
-            <div class="empty-state">
-                <h5>暂无消息历史</h5>
-                <p>发送消息后会在这里显示历史记录</p>
+            <div class="empty-state" style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 48px; margin-bottom: 16px; color: #d9d9d9;">💬</div>
+                <h5 style="margin-bottom: 8px; color: #666;">暂无消息历史</h5>
+                <p style="margin: 0; color: #999;">发送消息后会在这里显示历史记录</p>
             </div>
         `;
         return;
@@ -941,40 +962,71 @@ function renderMessageHistory() {
     container.innerHTML = filteredMessages.map(message => {
         const webhook = webhooks.find(w => w.id === message.webhookId);
         const webhookName = webhook ? webhook.name : '未知Webhook';
-        const statusClass = message.success ? 'success' : 'failed';
         const messageType = getMessageType(message.messageData);
         const messagePreview = getMessagePreview(message.messageData);
+        const messageTime = formatRelativeTime(message.timestamp);
+        
+        // 获取消息类型图标
+        const getTypeIcon = (type) => {
+            switch (type) {
+                case '文本消息':
+                    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v3c0 .6.4 1 1 1 .2 0 .3 0 .5-.1L14 18h6c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>';
+                case '嵌入消息':
+                    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>';
+                case '文件消息':
+                    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>';
+                default:
+                    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+            }
+        };
         
         return `
-            <div class="message-item ${statusClass}">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center">
-                                <h6 class="mb-0 me-2">${webhookName}</h6>
-                                <span class="badge ${message.success ? 'bg-success' : 'bg-danger'} me-2">
-                                    ${message.success ? '成功' : '失败'}
-                                </span>
-                                <span class="badge bg-light text-dark">${messageType}</span>
-                            </div>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="showMessageDetail('${message.id}')" title="查看详情">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                        <div class="message-preview mb-2" onclick="showMessageDetail('${message.id}')" style="cursor: pointer;">
-                            ${messagePreview}
-                        </div>
-                        <small class="text-muted">
-                            <i class="bi bi-clock"></i> ${message.timestamp}
-                        </small>
+        <div class="message-item" style="border: 1px solid #f0f0f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: white; transition: box-shadow 0.2s; ${message.success ? 'border-left: 4px solid #52c41a;' : 'border-left: 4px solid #ff4d4f;'}" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f1f1f;">${webhookName}</h6>
+                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${message.success ? 'background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f;' : 'background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7;'}">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; ${message.success ? 'background: #52c41a;' : 'background: #ff4d4f;'}"></span>
+                            ${message.success ? '发送成功' : '发送失败'}
+                        </span>
+                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; background: #f0f0f0; color: #666; gap: 4px;">
+                            ${getTypeIcon(messageType)}
+                            ${messageType}
+                        </span>
+                    </div>
+                    <div class="message-preview" onclick="showMessageDetail('${message.id}')" style="margin-bottom: 8px; padding: 8px; background: #fafafa; border-radius: 6px; cursor: pointer; font-size: 14px; line-height: 1.4; color: #333; border: 1px solid #f0f0f0; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='#fafafa'">
+                        ${messagePreview}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 16px; font-size: 12px; color: #999;">
+                        <span style="display: flex; align-items: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            ${messageTime}
+                        </span>
                     </div>
                 </div>
-                ${!message.success ? `
-                    <div class="alert alert-danger mt-2 mb-0">
-                        <small><i class="bi bi-exclamation-triangle"></i> ${message.error}</small>
-                    </div>
-                ` : ''}
+                <div style="margin-left: 16px; flex-shrink: 0;">
+                    <button onclick="showMessageDetail('${message.id}')" title="查看详情" style="padding: 4px 12px; border: 1px solid #d9d9d9; background: white; color: #666; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f5f5f5';" onmouseout="this.style.background='white';">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
+                        详情
+                    </button>
+                </div>
             </div>
+            ${!message.success ? `
+                <div style="margin-top: 12px; padding: 8px 12px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 6px;">
+                    <div style="display: flex; align-items: center; font-size: 12px; color: #ff4d4f;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px; flex-shrink: 0;">
+                            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                        </svg>
+                        <span style="word-break: break-all;">${message.error}</span>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
         `;
     }).join('');
 }
@@ -1437,5 +1489,55 @@ async function testProxyConnection() {
     } catch (error) {
         document.getElementById('proxyStatus').textContent = '连接测试失败';
         showToast('代理测试失败: ' + error.message, 'error');
+    }
+}
+
+// 格式化相对时间
+function formatRelativeTime(dateString) {
+    if (!dateString) return '未知时间';
+    
+    try {
+        // 如果有dayjs，使用dayjs格式化
+        if (typeof dayjs !== 'undefined') {
+            const date = dayjs(dateString);
+            const now = dayjs();
+            const diffInMinutes = now.diff(date, 'minute');
+            const diffInHours = now.diff(date, 'hour');
+            const diffInDays = now.diff(date, 'day');
+            
+            if (diffInMinutes < 1) {
+                return '刚刚';
+            } else if (diffInMinutes < 60) {
+                return `${diffInMinutes} 分钟前`;
+            } else if (diffInHours < 24) {
+                return `${diffInHours} 小时前`;
+            } else if (diffInDays < 7) {
+                return `${diffInDays} 天前`;
+            } else {
+                return date.format('YYYY-MM-DD');
+            }
+        } else {
+            // 降级到原生JavaScript
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInMs = now - date;
+            const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+            const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+            const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+            
+            if (diffInMinutes < 1) {
+                return '刚刚';
+            } else if (diffInMinutes < 60) {
+                return `${diffInMinutes} 分钟前`;
+            } else if (diffInHours < 24) {
+                return `${diffInHours} 小时前`;
+            } else if (diffInDays < 7) {
+                return `${diffInDays} 天前`;
+            } else {
+                return date.toISOString().split('T')[0];
+            }
+        }
+    } catch (error) {
+        return dateString;
     }
 } 
