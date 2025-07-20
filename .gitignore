@@ -2,3 +2,13 @@
 /node_modules
 /package-lock.json
 /uploads
+
+# 环境变量文件
+.env
+.env.local
+.env.production
+.env.development
+
+# 日志文件
+logs/
+*.log

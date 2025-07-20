@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -40,8 +41,8 @@ const DEFAULT_PROXY_CONFIG = {
 
 // 默认管理员账户
 const DEFAULT_ADMIN = {
-    username: 'admin',
-    password: 'admin123', // 默认密码，首次启动后应该修改
+    username: process.env.ADMIN_USERNAME || 'admin',
+    password: process.env.ADMIN_PASSWORD || 'admin123', // 默认密码，首次启动后应该修改
     role: 'admin',
     createdAt: moment().format('YYYY-MM-DD HH:mm:ss')
 };
