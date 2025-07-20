@@ -45,8 +45,8 @@
 1. **克隆或下载项目**
    ```bash
    # 如果是git仓库
-   git clone <repository-url>
-   cd discord-webhook-dashboard
+   git clone https://github.com/lougedada/discord_notice.git
+   cd discord_notice
    
    # 或者直接在项目目录中
    ```
