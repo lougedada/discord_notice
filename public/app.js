@@ -352,10 +352,10 @@ function renderWebhooksList() {
     
     if (webhooks.length === 0) {
         container.innerHTML = `
-            <div class="empty-state" style="text-align: center; padding: 40px; color: #666;">
-                <div style="font-size: 48px; margin-bottom: 16px; color: #d9d9d9;">📡</div>
-                <h5 style="margin-bottom: 8px; color: #666;">还没有Webhook</h5>
-                <p style="margin: 0; color: #999;">点击"添加Webhook"按钮来添加第一个Webhook</p>
+            <div class="empty-state" style="text-align: center; padding: 60px 40px; color: #666; background: white; border-radius: 12px; border: 1px solid #f0f0f0;">
+                <div style="font-size: 64px; margin-bottom: 20px; color: #d9d9d9;">📡</div>
+                <h4 style="margin-bottom: 12px; color: #666; font-size: 18px; font-weight: 600;">还没有Webhook</h4>
+                <p style="margin: 0; color: #999; font-size: 15px; line-height: 1.5;">点击"添加Webhook"按钮来添加第一个Webhook</p>
             </div>
         `;
         return;
@@ -367,42 +367,42 @@ function renderWebhooksList() {
         const messageCount = webhook.messageCount || 0;
         
         return `
-        <div class="webhook-item" style="border: 1px solid #f0f0f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: white; transition: box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+        <div class="webhook-item" style="border: 1px solid #f0f0f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; background: white; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)'; this.style.transform='translateY(0)';">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f1f1f;">${webhook.name}</h6>
-                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${webhook.isActive ? 'background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f;' : 'background: #f5f5f5; color: #8c8c8c; border: 1px solid #d9d9d9;'}">
-                            <span style="width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; ${webhook.isActive ? 'background: #52c41a;' : 'background: #8c8c8c;'}"></span>
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 12px;">
+                        <h5 style="margin: 0; font-size: 18px; font-weight: 600; color: #1f1f1f; line-height: 1.2;">${webhook.name}</h5>
+                        <span style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; ${webhook.isActive ? 'background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f;' : 'background: #f5f5f5; color: #8c8c8c; border: 1px solid #d9d9d9;'}">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; ${webhook.isActive ? 'background: #52c41a;' : 'background: #8c8c8c;'}"></span>
                             ${webhook.isActive ? '活跃' : '禁用'}
                         </span>
                     </div>
                     ${webhook.description ? `
-                        <p style="margin: 0 0 8px 0; color: #666; font-size: 14px; line-height: 1.4; word-break: break-all;">${webhook.description}</p>
+                        <p style="margin: 0 0 12px 0; color: #666; font-size: 15px; line-height: 1.5; word-break: break-all;">${webhook.description}</p>
                     ` : ''}
-                    <div style="display: flex; align-items: center; gap: 16px; font-size: 12px; color: #999;">
+                    <div style="display: flex; align-items: center; gap: 20px; font-size: 13px; color: #999;">
                         <span style="display: flex; align-items: center;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px;">
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                             </svg>
                             创建于 ${createdTime}
                         </span>
                         <span style="display: flex; align-items: center;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px;">
                                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                             </svg>
                             ${messageCount} 条消息
                         </span>
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px; margin-left: 16px; flex-shrink: 0;">
-                    <button onclick="testWebhook('${webhook.id}')" title="测试Webhook" style="padding: 4px 12px; border: 1px solid #1890ff; background: white; color: #1890ff; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#1890ff'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#1890ff';">
+                <div style="display: flex; gap: 10px; margin-left: 20px; flex-shrink: 0;">
+                    <button onclick="testWebhook('${webhook.id}')" title="测试Webhook" style="padding: 8px 16px; border: 1px solid #1890ff; background: white; color: #1890ff; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; min-width: 60px;" onmouseover="this.style.background='#1890ff'; this.style.color='white'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='white'; this.style.color='#1890ff'; this.style.transform='translateY(0)';">
                         测试
                     </button>
-                    <button onclick="editWebhook('${webhook.id}')" title="编辑Webhook" style="padding: 4px 12px; border: 1px solid #d9d9d9; background: white; color: #666; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f5f5f5';" onmouseout="this.style.background='white';">
+                    <button onclick="editWebhook('${webhook.id}')" title="编辑Webhook" style="padding: 8px 16px; border: 1px solid #d9d9d9; background: white; color: #666; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; min-width: 60px;" onmouseover="this.style.background='#f5f5f5'; this.style.borderColor='#bfbfbf'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='white'; this.style.borderColor='#d9d9d9'; this.style.transform='translateY(0)';">
                         编辑
                     </button>
-                    <button onclick="deleteWebhook('${webhook.id}')" title="删除Webhook" style="padding: 4px 12px; border: 1px solid #ff4d4f; background: white; color: #ff4d4f; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#ff4d4f'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#ff4d4f';">
+                    <button onclick="deleteWebhook('${webhook.id}')" title="删除Webhook" style="padding: 8px 16px; border: 1px solid #ff4d4f; background: white; color: #ff4d4f; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; min-width: 60px;" onmouseover="this.style.background='#ff4d4f'; this.style.color='white'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='white'; this.style.color='#ff4d4f'; this.style.transform='translateY(0)';">
                         删除
                     </button>
                 </div>
@@ -981,35 +981,35 @@ function renderMessageHistory() {
         };
         
         return `
-        <div class="message-item" style="border: 1px solid #f0f0f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: white; transition: box-shadow 0.2s; ${message.success ? 'border-left: 4px solid #52c41a;' : 'border-left: 4px solid #ff4d4f;'}" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+        <div class="message-item" style="border: 1px solid #f0f0f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; background: white; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02); width: 100%; ${message.success ? 'border-left: 4px solid #52c41a;' : 'border-left: 4px solid #ff4d4f;'}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)'; this.style.transform='translateY(0)';"
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-                        <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f1f1f;">${webhookName}</h6>
-                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${message.success ? 'background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f;' : 'background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7;'}">
-                            <span style="width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; ${message.success ? 'background: #52c41a;' : 'background: #ff4d4f;'}"></span>
+                    <div style="display: flex; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 12px;">
+                        <h5 style="margin: 0; font-size: 18px; font-weight: 600; color: #1f1f1f; line-height: 1.2;">${webhookName}</h5>
+                        <span style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; ${message.success ? 'background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f;' : 'background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7;'}">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; ${message.success ? 'background: #52c41a;' : 'background: #ff4d4f;'}"></span>
                             ${message.success ? '发送成功' : '发送失败'}
                         </span>
-                        <span style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; background: #f0f0f0; color: #666; gap: 4px;">
+                        <span style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight: 500; background: #f0f0f0; color: #666; gap: 6px;">
                             ${getTypeIcon(messageType)}
                             ${messageType}
                         </span>
                     </div>
-                    <div class="message-preview" onclick="showMessageDetail('${message.id}')" style="margin-bottom: 8px; padding: 8px; background: #fafafa; border-radius: 6px; cursor: pointer; font-size: 14px; line-height: 1.4; color: #333; border: 1px solid #f0f0f0; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='#fafafa'">
+                    <div class="message-preview" onclick="showMessageDetail('${message.id}')" style="margin-bottom: 12px; padding: 12px; background: #fafafa; border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1.5; color: #333; border: 1px solid #f0f0f0; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f5f5f5'; this.style.transform='translateY(-1px)';" onmouseout="this.style.backgroundColor='#fafafa'; this.style.transform='translateY(0)';">
                         ${messagePreview}
                     </div>
-                    <div style="display: flex; align-items: center; gap: 16px; font-size: 12px; color: #999;">
+                    <div style="display: flex; align-items: center; gap: 20px; font-size: 13px; color: #999;">
                         <span style="display: flex; align-items: center;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px;">
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                             </svg>
                             ${messageTime}
                         </span>
                     </div>
                 </div>
-                <div style="margin-left: 16px; flex-shrink: 0;">
-                    <button onclick="showMessageDetail('${message.id}')" title="查看详情" style="padding: 4px 12px; border: 1px solid #d9d9d9; background: white; color: #666; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f5f5f5';" onmouseout="this.style.background='white';">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                <div style="margin-left: 20px; flex-shrink: 0;">
+                    <button onclick="showMessageDetail('${message.id}')" title="查看详情" style="padding: 8px 16px; border: 1px solid #d9d9d9; background: white; color: #666; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; min-width: 80px;" onmouseover="this.style.background='#f5f5f5'; this.style.borderColor='#bfbfbf'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='white'; this.style.borderColor='#d9d9d9'; this.style.transform='translateY(0)';">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px;">
                             <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                         </svg>
                         详情
@@ -1017,12 +1017,12 @@ function renderMessageHistory() {
                 </div>
             </div>
             ${!message.success ? `
-                <div style="margin-top: 12px; padding: 8px 12px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 6px;">
-                    <div style="display: flex; align-items: center; font-size: 12px; color: #ff4d4f;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px; flex-shrink: 0;">
+                <div style="margin-top: 16px; padding: 12px 16px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 8px;">
+                    <div style="display: flex; align-items: center; font-size: 13px; color: #ff4d4f;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px; flex-shrink: 0;">
                             <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                         </svg>
-                        <span style="word-break: break-all;">${message.error}</span>
+                        <span style="word-break: break-all; line-height: 1.4;">${message.error}</span>
                     </div>
                 </div>
             ` : ''}

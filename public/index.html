@@ -95,15 +95,17 @@
 
         .webhook-item {
             border: 1px solid #f0f0f0;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
             background: white;
-            transition: box-shadow 0.2s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         
         .webhook-item:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
         }
 
         .webhook-header {
@@ -137,15 +139,18 @@
 
         .message-item {
             border: 1px solid #f0f0f0;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
             background: white;
-            transition: box-shadow 0.2s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            width: 100%;
         }
         
         .message-item:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
         }
 
         .message-preview {
@@ -580,7 +585,7 @@
                                         <button class="ant-btn ant-btn-danger" id="clearHistoryBtn" style="background: #ff4d4f; border-color: #ff4d4f; color: white; height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #ff4d4f; cursor: pointer;">清除历史</button>
                                     </div>
                                 </div>
-                                <div id="messageHistory" class="loading">
+                                <div id="messageHistory" class="loading" style="display: flex; flex-direction: column; width: 100%;">
                                     <div style="display: flex; justify-content: center; align-items: center; padding: 40px;">
                                         <div style="width: 16px; height: 16px; border: 2px solid #1890ff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                                         <span style="margin-left: 8px; color: #666;">加载中...</span>
