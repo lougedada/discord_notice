@@ -167,9 +167,7 @@ router.post('/send', async (req, res) => {
 
     // 创建带代理的axios实例并发送消息
     const axiosInstance = createAxiosInstance(req);
-    console.log('正在发送文本消息到:', webhook.webhookUrl);
     const response = await axiosInstance.post(webhook.webhookUrl, messageData);
-    console.log('文本消息发送成功');
     
     // 记录成功的消息
     logMessage(webhookId, messageData, true);
@@ -238,9 +236,7 @@ router.post('/send-embed', async (req, res) => {
 
     // 创建带代理的axios实例并发送消息
     const axiosInstance = createAxiosInstance(req);
-    console.log('正在发送嵌入消息到:', webhook.webhookUrl);
     const response = await axiosInstance.post(webhook.webhookUrl, messageData);
-    console.log('嵌入消息发送成功');
     
     // 记录成功的消息
     logMessage(webhookId, messageData, true);
@@ -313,11 +309,9 @@ router.post('/send-file', upload.single('file'), async (req, res) => {
 
     // 创建带代理的axios实例并发送消息
     const axiosInstance = createAxiosInstance(req);
-    console.log('正在发送文件消息到:', webhook.webhookUrl);
     const response = await axiosInstance.post(webhook.webhookUrl, form, {
       headers: form.getHeaders()
     });
-    console.log('文件消息发送成功');
     
     // 清理临时文件
     fs.removeSync(file.path);

@@ -16,15 +16,23 @@ const elements = {
     fileMessageForm: document.getElementById('fileMessageForm'),
     messageHistory: document.getElementById('messageHistory'),
     historyWebhookFilter: document.getElementById('historyWebhookFilter'),
-    currentTime: document.getElementById('currentTime'),
-    globalToast: new bootstrap.Toast(document.getElementById('globalToast'))
+    currentTime: document.getElementById('currentTime')
 };
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth().then(() => {
         initializeApp();
-        setupEventListeners();
+        
+        // 等待组件初始化完成
+        if (window.antdReady) {
+            setupEventListeners();
+        } else {
+            window.addEventListener('antdReady', function() {
+                setupEventListeners();
+            });
+        }
+        
         updateTime();
         setInterval(updateTime, 1000);
     });
@@ -63,7 +71,7 @@ async function logout() {
         window.location.href = '/login';
     } catch (error) {
         console.error('登出失败:', error);
-        showToast('登出失败');
+        showToast('登出失败', 'error');
     }
 }
 
@@ -74,18 +82,18 @@ async function changePassword() {
     const confirmPassword = document.getElementById('confirmPassword').value;
     
     if (!currentPassword || !newPassword || !confirmPassword) {
-        showToast('请填写所有字段');
-        return;
+        showToast('请填写所有字段', 'warning');
+        return Promise.reject(); // 阻止模态框关闭
     }
     
     if (newPassword !== confirmPassword) {
-        showToast('新密码与确认密码不匹配');
-        return;
+        showToast('新密码与确认密码不匹配', 'warning');
+        return Promise.reject(); // 阻止模态框关闭
     }
     
     if (newPassword.length < 6) {
-        showToast('新密码长度至少6位');
-        return;
+        showToast('新密码长度至少6位', 'warning');
+        return Promise.reject(); // 阻止模态框关闭
     }
     
     try {
@@ -98,12 +106,12 @@ async function changePassword() {
         });
         
         if (response.success) {
-            bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
-            document.getElementById('changePasswordForm').reset();
-            showToast('密码修改成功');
+            showToast('密码修改成功', 'success');
+            return Promise.resolve(); // 允许模态框关闭
         }
     } catch (error) {
-        showToast('修改密码失败: ' + error.message);
+        showToast('修改密码失败: ' + error.message, 'error');
+        return Promise.reject(); // 阻止模态框关闭
     }
 }
 
@@ -116,11 +124,109 @@ async function initializeApp() {
     updateWebhookSelects();
 }
 
+// 显示添加Webhook模态框
+function showAddWebhookModal() {
+    // 检查组件是否已初始化
+    if (!window.antdReady || typeof window.Modal === 'undefined' || !window.Modal) {
+        showToast('系统正在初始化，请稍后再试', 'warning');
+        return;
+    }
+
+    // 创建模态框容器
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = `
+        <div class="ant-modal-mask" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); z-index: 1000;"></div>
+        <div class="ant-modal-wrap" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div class="ant-modal" style="width: 600px; background: white; border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); position: relative;">
+                <div class="ant-modal-content">
+                    <div class="ant-modal-header" style="padding: 16px 24px; border-bottom: 1px solid #f0f0f0;">
+                        <div class="ant-modal-title" style="font-size: 16px; font-weight: 600; color: rgba(0, 0, 0, 0.85);">添加Webhook</div>
+                        <button class="ant-modal-close" id="closeModalBtn" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 16px; cursor: pointer; padding: 8px; color: rgba(0, 0, 0, 0.45);">×</button>
+                    </div>
+                    <div class="ant-modal-body" style="padding: 24px;">
+                        <form id="addWebhookForm">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 500; color: rgba(0, 0, 0, 0.85);">名称</label>
+                                <input type="text" class="ant-input" id="webhookName" required style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px;" placeholder="输入Webhook名称">
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 500; color: rgba(0, 0, 0, 0.85);">Webhook URL</label>
+                                <input type="url" class="ant-input" id="webhookUrl" required style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px;" placeholder="https://discord.com/api/webhooks/...">
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 500; color: rgba(0, 0, 0, 0.85);">描述（可选）</label>
+                                <textarea class="ant-input" id="webhookDescription" rows="3" style="width: 100%; padding: 8px 11px; border: 1px solid #d9d9d9; border-radius: 6px; resize: vertical; font-size: 14px;" placeholder="输入描述信息"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="ant-modal-footer" style="padding: 10px 16px; text-align: right; border-top: 1px solid #f0f0f0;">
+                        <button class="ant-btn" id="cancelBtn" style="margin-right: 8px; height: 32px; padding: 4px 15px; border: 1px solid #d9d9d9; border-radius: 6px; background: white; color: rgba(0, 0, 0, 0.85); cursor: pointer;">取消</button>
+                        <button class="ant-btn ant-btn-primary" id="saveBtn" style="height: 32px; padding: 4px 15px; border: 1px solid #1890ff; border-radius: 6px; background: #1890ff; color: white; cursor: pointer;">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 添加到页面
+    document.body.appendChild(modalContainer);
+
+    // 绑定事件
+    const closeModal = () => {
+        document.body.removeChild(modalContainer);
+    };
+
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    modalContainer.querySelector('.ant-modal-mask').addEventListener('click', closeModal);
+    
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+        const name = document.getElementById('webhookName').value;
+        const url = document.getElementById('webhookUrl').value;
+        const description = document.getElementById('webhookDescription').value;
+        
+        if (!name || !url) {
+            showToast('请填写必要信息', 'warning');
+            return;
+        }
+        
+        // 显示加载状态
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.innerHTML = '保存中...';
+        saveBtn.disabled = true;
+        
+        try {
+            await apiCall('/api/webhooks', {
+                method: 'POST',
+                body: JSON.stringify({ name, webhookUrl: url, description })
+            });
+            
+            closeModal();
+            await loadWebhooks();
+            await loadStats();
+            updateWebhookSelects();
+            showToast('Webhook添加成功', 'success');
+        } catch (error) {
+            showToast('添加Webhook失败: ' + error.message, 'error');
+            saveBtn.innerHTML = '保存';
+            saveBtn.disabled = false;
+        }
+    });
+
+    // 聚焦到名称输入框
+    setTimeout(() => {
+        document.getElementById('webhookName').focus();
+    }, 100);
+}
+
 // 设置事件监听器
 function setupEventListeners() {
     // Webhook管理
-    document.getElementById('saveWebhookBtn').addEventListener('click', saveWebhook);
-    document.getElementById('updateWebhookBtn').addEventListener('click', updateWebhook);
+    const addWebhookBtn = document.getElementById('addWebhookBtn');
+    
+    if (addWebhookBtn) {
+        addWebhookBtn.addEventListener('click', showAddWebhookModal);
+    }
     
     // 消息发送
     document.getElementById('messageType').addEventListener('change', toggleMessageForms);
@@ -146,7 +252,7 @@ function setupEventListeners() {
     
     // 用户管理
     document.getElementById('logoutBtn').addEventListener('click', logout);
-    document.getElementById('savePasswordBtn').addEventListener('click', changePassword);
+    // 注意：savePasswordBtn 已经被移除，现在通过模态框的onOk处理
 }
 
 // 更新时间显示
@@ -155,13 +261,49 @@ function updateTime() {
     elements.currentTime.textContent = now.toLocaleString('zh-CN');
 }
 
-// 显示提示消息
-function showToast(message, type = 'info') {
-    const toast = document.getElementById('globalToast');
-    const toastBody = toast.querySelector('.toast-body');
-    toastBody.textContent = message;
-    elements.globalToast.show();
+// 显示提示消息 - 直接实现自定义toast
+function showToast(msg, type = 'info') {
+    const toast = document.createElement('div');
+    const colors = {
+        success: { bg: '#f6ffed', border: '#b7eb8f', text: '#52c41a' },
+        error: { bg: '#fff2f0', border: '#ffccc7', text: '#ff4d4f' },
+        warning: { bg: '#fffbe6', border: '#ffe58f', text: '#faad14' },
+        info: { bg: '#e6f7ff', border: '#91d5ff', text: '#1890ff' }
+    };
+    
+    const color = colors[type] || colors.info;
+    
+    toast.style.cssText = `
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${color.bg};
+        border: 1px solid ${color.border};
+        color: ${color.text};
+        padding: 12px 16px;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        font-size: 14px;
+        max-width: 300px;
+        animation: slideInDown 0.3s ease-out;
+    `;
+    
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOutUp 0.3s ease-in';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
 }
+
+
 
 // API调用函数
 async function apiCall(url, options = {}) {
@@ -200,7 +342,7 @@ async function loadWebhooks() {
         webhooks = await apiCall('/api/webhooks');
         renderWebhooksList();
     } catch (error) {
-        showToast('加载Webhook列表失败: ' + error.message);
+        showToast('加载Webhook列表失败: ' + error.message, 'error');
     }
 }
 
@@ -250,84 +392,180 @@ function renderWebhooksList() {
     `).join('');
 }
 
-// 保存新Webhook
-async function saveWebhook() {
-    const name = document.getElementById('webhookName').value;
-    const url = document.getElementById('webhookUrl').value;
-    const description = document.getElementById('webhookDescription').value;
-    
-    if (!name || !url) {
-        showToast('请填写必要信息');
-        return;
-    }
-    
-    try {
-        await apiCall('/api/webhooks', {
-            method: 'POST',
-            body: JSON.stringify({ name, webhookUrl: url, description })
-        });
-        
-        bootstrap.Modal.getInstance(document.getElementById('addWebhookModal')).hide();
-        document.getElementById('addWebhookForm').reset();
-        await loadWebhooks();
-        await loadStats();
-        updateWebhookSelects();
-        showToast('Webhook添加成功');
-    } catch (error) {
-        showToast('添加Webhook失败: ' + error.message);
-    }
-}
+
 
 // 编辑Webhook
 function editWebhook(id) {
     const webhook = webhooks.find(w => w.id === id);
     if (!webhook) return;
     
-    document.getElementById('editWebhookId').value = webhook.id;
-    document.getElementById('editWebhookName').value = webhook.name;
-    document.getElementById('editWebhookUrl').value = webhook.webhookUrl;
-    document.getElementById('editWebhookDescription').value = webhook.description || '';
-    document.getElementById('editWebhookActive').checked = webhook.isActive;
+    // 检查Ant Design组件是否已初始化
+    if (!window.antdReady || typeof window.Modal === 'undefined' || !window.Modal) {
+        showToast('系统正在初始化，请稍后再试', 'warning');
+        return;
+    }
+
+    // 创建模态框容器
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = `
+        <div class="ant-modal-mask" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); z-index: 1000;"></div>
+        <div class="ant-modal-wrap" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div class="ant-modal" style="width: 600px; background: white; border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); position: relative;">
+                <div class="ant-modal-content">
+                    <div class="ant-modal-header" style="padding: 16px 24px; border-bottom: 1px solid #f0f0f0;">
+                        <div class="ant-modal-title" style="font-size: 16px; font-weight: 600; color: rgba(0, 0, 0, 0.85);">编辑Webhook</div>
+                        <button class="ant-modal-close" id="closeModalBtn" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 16px; cursor: pointer; padding: 8px; color: rgba(0, 0, 0, 0.45);">×</button>
+                    </div>
+                    <div class="ant-modal-body" style="padding: 24px;">
+                        <form id="editWebhookForm">
+                            <input type="hidden" id="editWebhookId" value="${webhook.id}">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 500; color: rgba(0, 0, 0, 0.85);">名称</label>
+                                <input type="text" class="ant-input" id="editWebhookName" value="${webhook.name}" required style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 500; color: rgba(0, 0, 0, 0.85);">Webhook URL</label>
+                                <input type="url" class="ant-input" id="editWebhookUrl" value="${webhook.webhookUrl}" required style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 500; color: rgba(0, 0, 0, 0.85);">描述</label>
+                                <textarea class="ant-input" id="editWebhookDescription" rows="3" style="width: 100%; padding: 8px 11px; border: 1px solid #d9d9d9; border-radius: 6px; resize: vertical; font-size: 14px;">${webhook.description || ''}</textarea>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: flex; align-items: center; cursor: pointer; color: rgba(0, 0, 0, 0.85);">
+                                    <input type="checkbox" id="editWebhookActive" ${webhook.isActive ? 'checked' : ''} style="margin-right: 8px;">
+                                    启用此Webhook
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="ant-modal-footer" style="padding: 10px 16px; text-align: right; border-top: 1px solid #f0f0f0;">
+                        <button class="ant-btn" id="cancelBtn" style="margin-right: 8px; height: 32px; padding: 4px 15px; border: 1px solid #d9d9d9; border-radius: 6px; background: white; color: rgba(0, 0, 0, 0.85); cursor: pointer;">取消</button>
+                        <button class="ant-btn ant-btn-primary" id="updateBtn" style="height: 32px; padding: 4px 15px; border: 1px solid #1890ff; border-radius: 6px; background: #1890ff; color: white; cursor: pointer;">更新</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 添加到页面
+    document.body.appendChild(modalContainer);
+
+    // 绑定事件
+    const closeModal = () => {
+        document.body.removeChild(modalContainer);
+    };
+
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    modalContainer.querySelector('.ant-modal-mask').addEventListener('click', closeModal);
     
-    new bootstrap.Modal(document.getElementById('editWebhookModal')).show();
+    document.getElementById('updateBtn').addEventListener('click', async () => {
+        const id = document.getElementById('editWebhookId').value;
+        const name = document.getElementById('editWebhookName').value;
+        const url = document.getElementById('editWebhookUrl').value;
+        const description = document.getElementById('editWebhookDescription').value;
+        const isActive = document.getElementById('editWebhookActive').checked;
+        
+        if (!name || !url) {
+            showToast('请填写必要信息', 'warning');
+            return;
+        }
+        
+        // 显示加载状态
+        const updateBtn = document.getElementById('updateBtn');
+        updateBtn.innerHTML = '更新中...';
+        updateBtn.disabled = true;
+        
+        try {
+            await apiCall(`/api/webhooks/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ name, webhookUrl: url, description, isActive })
+            });
+            
+            closeModal();
+            await loadWebhooks();
+            await loadStats();
+            updateWebhookSelects();
+            showToast('Webhook更新成功', 'success');
+        } catch (error) {
+            showToast('更新Webhook失败: ' + error.message, 'error');
+            updateBtn.innerHTML = '更新';
+            updateBtn.disabled = false;
+        }
+    });
+
+    // 聚焦到名称输入框
+    setTimeout(() => {
+        document.getElementById('editWebhookName').focus();
+    }, 100);
 }
 
-// 更新Webhook
-async function updateWebhook() {
-    const id = document.getElementById('editWebhookId').value;
-    const name = document.getElementById('editWebhookName').value;
-    const url = document.getElementById('editWebhookUrl').value;
-    const description = document.getElementById('editWebhookDescription').value;
-    const isActive = document.getElementById('editWebhookActive').checked;
-    
-    try {
-        await apiCall(`/api/webhooks/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({ name, webhookUrl: url, description, isActive })
-        });
-        
-        bootstrap.Modal.getInstance(document.getElementById('editWebhookModal')).hide();
-        await loadWebhooks();
-        await loadStats();
-        updateWebhookSelects();
-        showToast('Webhook更新成功');
-    } catch (error) {
-        showToast('更新Webhook失败: ' + error.message);
-    }
-}
+
 
 // 删除Webhook
-async function deleteWebhook(id) {
-    if (!confirm('确定要删除这个Webhook吗？')) return;
+function deleteWebhook(id) {
+    // 检查Ant Design组件是否已初始化
+    if (!window.antdReady || typeof window.Modal === 'undefined' || !window.Modal) {
+        const result = confirm('确定要删除这个Webhook吗？此操作不可恢复！');
+        if (result) {
+            performDeleteWebhook(id);
+        }
+        return;
+    }
+
+    // 创建确认对话框
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = `
+        <div class="ant-modal-mask" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); z-index: 1000;"></div>
+        <div class="ant-modal-wrap" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div class="ant-modal" style="width: 416px; background: white; border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); position: relative;">
+                <div class="ant-modal-content">
+                    <div class="ant-modal-body" style="padding: 32px 32px 24px;">
+                        <div style="display: flex; align-items: flex-start;">
+                            <div style="color: #faad14; font-size: 22px; margin-right: 16px; line-height: 1;">⚠️</div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 16px; font-weight: 600; color: rgba(0, 0, 0, 0.85); margin-bottom: 8px;">确认删除</div>
+                                <div style="color: rgba(0, 0, 0, 0.65);">确定要删除这个Webhook吗？此操作不可恢复！</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ant-modal-footer" style="padding: 10px 16px; text-align: right; border-top: 1px solid #f0f0f0;">
+                        <button class="ant-btn" id="cancelBtn" style="margin-right: 8px; height: 32px; padding: 4px 15px; border: 1px solid #d9d9d9; border-radius: 6px; background: white; color: rgba(0, 0, 0, 0.85); cursor: pointer;">取消</button>
+                        <button class="ant-btn ant-btn-danger" id="deleteBtn" style="height: 32px; padding: 4px 15px; border: 1px solid #ff4d4f; border-radius: 6px; background: #ff4d4f; color: white; cursor: pointer;">删除</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 添加到页面
+    document.body.appendChild(modalContainer);
+
+    // 绑定事件
+    const closeModal = () => {
+        document.body.removeChild(modalContainer);
+    };
+
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    modalContainer.querySelector('.ant-modal-mask').addEventListener('click', closeModal);
     
+    document.getElementById('deleteBtn').addEventListener('click', async () => {
+        closeModal();
+        await performDeleteWebhook(id);
+    });
+}
+
+// 执行删除Webhook操作
+async function performDeleteWebhook(id) {
     try {
         await apiCall(`/api/webhooks/${id}`, { method: 'DELETE' });
         await loadWebhooks();
         await loadStats();
         updateWebhookSelects();
-        showToast('Webhook删除成功');
+        showToast('Webhook删除成功', 'success');
     } catch (error) {
-        showToast('删除Webhook失败: ' + error.message);
+        showToast('删除Webhook失败: ' + error.message, 'error');
     }
 }
 
@@ -339,7 +577,7 @@ async function testWebhook(id) {
         await loadMessages();
         await loadStats();
     } catch (error) {
-        showToast('测试Webhook失败: ' + error.message);
+        showToast('测试Webhook失败: ' + error.message, 'error');
     }
 }
 
@@ -432,7 +670,7 @@ async function sendMessage() {
     const messageType = elements.messageType.value;
     
     if (!webhookId) {
-        showToast('请选择Webhook');
+        showToast('请选择Webhook', 'warning');
         return;
     }
     
@@ -452,7 +690,7 @@ async function sendMessage() {
         await loadStats();
         clearMessageForm();
     } catch (error) {
-        showToast('发送消息失败: ' + error.message);
+        showToast('发送消息失败: ' + error.message, 'error');
     }
 }
 
@@ -676,7 +914,7 @@ async function loadMessages() {
         messages = response.messages;
         renderMessageHistory();
     } catch (error) {
-        showToast('加载消息历史失败: ' + error.message);
+        showToast('加载消息历史失败: ' + error.message, 'error');
     }
 }
 
@@ -844,8 +1082,45 @@ function showMessageDetail(messageId) {
         `;
     }
     
-    document.getElementById('messageDetailContent').innerHTML = detailHTML;
-    new bootstrap.Modal(document.getElementById('messageDetailModal')).show();
+    // 检查Ant Design组件是否已初始化
+    if (!window.antdReady || typeof window.Modal === 'undefined' || !window.Modal) {
+        alert('消息详情:\n\n' + detailHTML.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' '));
+        return;
+    }
+
+    // 创建信息模态框
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = `
+        <div class="ant-modal-mask" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); z-index: 1000;"></div>
+        <div class="ant-modal-wrap" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div class="ant-modal" style="width: 800px; background: white; border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); position: relative; max-height: 80vh; overflow-y: auto;">
+                <div class="ant-modal-content">
+                    <div class="ant-modal-header" style="padding: 16px 24px; border-bottom: 1px solid #f0f0f0;">
+                        <div class="ant-modal-title" style="font-size: 16px; font-weight: 600; color: rgba(0, 0, 0, 0.85);">消息详情</div>
+                        <button class="ant-modal-close" id="closeModalBtn" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 16px; cursor: pointer; padding: 8px; color: rgba(0, 0, 0, 0.45);">×</button>
+                    </div>
+                    <div class="ant-modal-body" style="padding: 24px; max-height: 60vh; overflow-y: auto;">
+                        ${detailHTML}
+                    </div>
+                    <div class="ant-modal-footer" style="padding: 10px 16px; text-align: right; border-top: 1px solid #f0f0f0;">
+                        <button class="ant-btn ant-btn-primary" id="closeBtn" style="height: 32px; padding: 4px 15px; border: 1px solid #1890ff; border-radius: 6px; background: #1890ff; color: white; cursor: pointer;">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 添加到页面
+    document.body.appendChild(modalContainer);
+
+    // 绑定事件
+    const closeModal = () => {
+        document.body.removeChild(modalContainer);
+    };
+
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('closeBtn').addEventListener('click', closeModal);
+    modalContainer.querySelector('.ant-modal-mask').addEventListener('click', closeModal);
 }
 
 // 过滤消息历史
@@ -863,20 +1138,71 @@ async function loadStats() {
         elements.successRate.textContent = stats.successRate + '%';
         elements.activeWebhooks.textContent = webhooks.filter(w => w.isActive).length;
     } catch (error) {
-        showToast('加载统计数据失败: ' + error.message);
+        showToast('加载统计数据失败: ' + error.message, 'error');
     }
 }
 
 // 测试所有Webhook
-async function testAllWebhooks() {
-    if (!confirm('确定要测试所有活跃的Webhook吗？')) return;
-    
+function testAllWebhooks() {
     const activeWebhooks = webhooks.filter(w => w.isActive);
     if (activeWebhooks.length === 0) {
-        showToast('没有活跃的Webhook可以测试');
+        showToast('没有活跃的Webhook可以测试', 'warning');
         return;
     }
     
+    // 检查Ant Design组件是否已初始化
+    if (!window.antdReady || typeof window.Modal === 'undefined' || !window.Modal) {
+        const result = confirm(`确定要测试所有 ${activeWebhooks.length} 个活跃的Webhook吗？`);
+        if (result) {
+            performBatchTest(activeWebhooks);
+        }
+        return;
+    }
+
+    // 创建确认对话框
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = `
+        <div class="ant-modal-mask" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); z-index: 1000;"></div>
+        <div class="ant-modal-wrap" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div class="ant-modal" style="width: 416px; background: white; border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); position: relative;">
+                <div class="ant-modal-content">
+                    <div class="ant-modal-body" style="padding: 32px 32px 24px;">
+                        <div style="display: flex; align-items: flex-start;">
+                            <div style="color: #1890ff; font-size: 22px; margin-right: 16px; line-height: 1;">🧪</div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 16px; font-weight: 600; color: rgba(0, 0, 0, 0.85); margin-bottom: 8px;">批量测试</div>
+                                <div style="color: rgba(0, 0, 0, 0.65);">确定要测试所有 ${activeWebhooks.length} 个活跃的Webhook吗？</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ant-modal-footer" style="padding: 10px 16px; text-align: right; border-top: 1px solid #f0f0f0;">
+                        <button class="ant-btn" id="cancelBtn" style="margin-right: 8px; height: 32px; padding: 4px 15px; border: 1px solid #d9d9d9; border-radius: 6px; background: white; color: rgba(0, 0, 0, 0.85); cursor: pointer;">取消</button>
+                        <button class="ant-btn ant-btn-primary" id="testBtn" style="height: 32px; padding: 4px 15px; border: 1px solid #1890ff; border-radius: 6px; background: #1890ff; color: white; cursor: pointer;">开始测试</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 添加到页面
+    document.body.appendChild(modalContainer);
+
+    // 绑定事件
+    const closeModal = () => {
+        document.body.removeChild(modalContainer);
+    };
+
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    modalContainer.querySelector('.ant-modal-mask').addEventListener('click', closeModal);
+    
+    document.getElementById('testBtn').addEventListener('click', async () => {
+        closeModal();
+        await performBatchTest(activeWebhooks);
+    });
+}
+
+// 执行批量测试
+async function performBatchTest(activeWebhooks) {
     let successCount = 0;
     let failCount = 0;
     
@@ -889,7 +1215,7 @@ async function testAllWebhooks() {
         }
     }
     
-    showToast(`测试完成: ${successCount} 成功, ${failCount} 失败`);
+    showToast(`测试完成: ${successCount} 成功, ${failCount} 失败`, 'info');
     await loadMessages();
     await loadStats();
 }
@@ -897,7 +1223,7 @@ async function testAllWebhooks() {
 // 刷新统计
 async function refreshStats() {
     await loadStats();
-    showToast('统计数据已刷新');
+    showToast('统计数据已刷新', 'success');
 }
 
 // 导出数据
@@ -916,20 +1242,71 @@ function exportData() {
     a.click();
     URL.revokeObjectURL(url);
     
-    showToast('数据导出成功');
+    showToast('数据导出成功', 'success');
 }
 
 // 清除历史
-async function clearHistory() {
-    if (!confirm('确定要清除所有消息历史吗？此操作不可恢复！')) return;
+function clearHistory() {
+    // 检查Ant Design组件是否已初始化
+    if (!window.antdReady || typeof window.Modal === 'undefined' || !window.Modal) {
+        const result = confirm('确定要清除所有消息历史吗？此操作不可恢复！');
+        if (result) {
+            performClearHistory();
+        }
+        return;
+    }
+
+    // 创建确认对话框
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = `
+        <div class="ant-modal-mask" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); z-index: 1000;"></div>
+        <div class="ant-modal-wrap" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div class="ant-modal" style="width: 416px; background: white; border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); position: relative;">
+                <div class="ant-modal-content">
+                    <div class="ant-modal-body" style="padding: 32px 32px 24px;">
+                        <div style="display: flex; align-items: flex-start;">
+                            <div style="color: #ff4d4f; font-size: 22px; margin-right: 16px; line-height: 1;">🗑️</div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 16px; font-weight: 600; color: rgba(0, 0, 0, 0.85); margin-bottom: 8px;">确认清除</div>
+                                <div style="color: rgba(0, 0, 0, 0.65);">确定要清除所有消息历史吗？此操作不可恢复！</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ant-modal-footer" style="padding: 10px 16px; text-align: right; border-top: 1px solid #f0f0f0;">
+                        <button class="ant-btn" id="cancelBtn" style="margin-right: 8px; height: 32px; padding: 4px 15px; border: 1px solid #d9d9d9; border-radius: 6px; background: white; color: rgba(0, 0, 0, 0.85); cursor: pointer;">取消</button>
+                        <button class="ant-btn ant-btn-danger" id="clearBtn" style="height: 32px; padding: 4px 15px; border: 1px solid #ff4d4f; border-radius: 6px; background: #ff4d4f; color: white; cursor: pointer;">清除</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 添加到页面
+    document.body.appendChild(modalContainer);
+
+    // 绑定事件
+    const closeModal = () => {
+        document.body.removeChild(modalContainer);
+    };
+
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    modalContainer.querySelector('.ant-modal-mask').addEventListener('click', closeModal);
     
+    document.getElementById('clearBtn').addEventListener('click', async () => {
+        closeModal();
+        await performClearHistory();
+    });
+}
+
+// 执行清除历史操作
+async function performClearHistory() {
     try {
         await apiCall('/api/messages', { method: 'DELETE' });
         await loadMessages();
         await loadStats();
-        showToast('消息历史已清除');
+        showToast('消息历史已清除', 'success');
     } catch (error) {
-        showToast('清除历史失败: ' + error.message);
+        showToast('清除历史失败: ' + error.message, 'error');
     }
 }
 
@@ -971,16 +1348,16 @@ async function saveProxyConfig() {
                 body: JSON.stringify({ enabled: false })
             });
             document.getElementById('proxyStatus').textContent = '代理已禁用';
-            showToast('代理已禁用');
+            showToast('代理已禁用', 'success');
         } catch (error) {
-            showToast('保存配置失败: ' + error.message);
+            showToast('保存配置失败: ' + error.message, 'error');
         }
         return;
     }
 
     // 验证必填字段
     if (!url && (!host || !port)) {
-        showToast('请输入代理主机和端口，或提供完整URL');
+        showToast('请输入代理主机和端口，或提供完整URL', 'warning');
         return;
     }
 
@@ -1002,11 +1379,19 @@ async function saveProxyConfig() {
             body: JSON.stringify(config)
         });
 
-        document.getElementById('proxyStatus').textContent = result.config.status;
-        showToast('代理配置已保存');
+
+        
+        if (result && result.success) {
+            const status = result.config && result.config.status ? result.config.status : '已保存';
+            document.getElementById('proxyStatus').textContent = status;
+            showToast(result.message || '代理配置已保存', 'success');
+        } else {
+            document.getElementById('proxyStatus').textContent = '保存失败';
+            showToast('保存代理配置失败: ' + (result && result.message ? result.message : '未知错误'), 'error');
+        }
     } catch (error) {
         document.getElementById('proxyStatus').textContent = '保存失败';
-        showToast('保存代理配置失败: ' + error.message);
+        showToast('保存代理配置失败: ' + error.message, 'error');
     }
 }
 
@@ -1029,7 +1414,7 @@ async function testProxyConnection() {
     const enabled = document.getElementById('proxyEnabled').checked;
     
     if (!enabled) {
-        showToast('请先启用代理');
+        showToast('请先启用代理', 'warning');
         return;
     }
     
@@ -1041,16 +1426,16 @@ async function testProxyConnection() {
             method: 'POST'
         });
         
-        if (result.success) {
+        if (result && result.success) {
             document.getElementById('proxyStatus').textContent = '代理连接正常';
-            showToast('代理连接测试成功');
+            showToast(result.message || '代理连接测试成功', 'success');
         } else {
             document.getElementById('proxyStatus').textContent = '代理连接失败';
-            showToast('代理连接测试失败: ' + result.message);
+            showToast('代理连接测试失败: ' + (result && result.message ? result.message : '未知错误'), 'error');
         }
         
     } catch (error) {
         document.getElementById('proxyStatus').textContent = '连接测试失败';
-        showToast('代理测试失败: ' + error.message);
+        showToast('代理测试失败: ' + error.message, 'error');
     }
 } 

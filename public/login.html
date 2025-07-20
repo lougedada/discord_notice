@@ -3,185 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - Discord Webhook 管理</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Discord Webhook 管理 - 登录</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f8f9fa;
+            background: #f5f5f5;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
         }
 
-        .login-container {
+        .login-card {
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 32px;
             width: 100%;
-            max-width: 400px;
+            max-width: 360px;
         }
 
-        .login-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .login-header h2 {
-            color: #495057;
+        .logo {
+            font-size: 24px;
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            color: #333;
+            margin-bottom: 4px;
+            text-align: center;
         }
 
-        .login-header p {
-            color: #6c757d;
-            margin: 0;
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+            text-align: center;
         }
 
-        .form-control {
-            border-radius: 6px;
-            border: 1px solid #ced4da;
-            padding: 0.75rem;
-            font-size: 1rem;
+        .form-group {
+            margin-bottom: 16px;
         }
 
-        .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-
-        .btn-primary {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-            border-radius: 6px;
-            padding: 0.75rem;
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: #333;
             font-weight: 500;
-            font-size: 1rem;
+            font-size: 14px;
+        }
+
+        .form-input {
             width: 100%;
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.2s;
+            outline: none;
         }
 
-        .btn-primary:hover {
-            background-color: #0b5ed7;
-            border-color: #0a58ca;
+        .form-input:focus {
+            border-color: #1890ff;
         }
 
-        .btn-primary:disabled {
-            opacity: 0.6;
+        .login-btn {
+            width: 100%;
+            height: 40px;
+            background: #1890ff;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .login-btn:hover:not(:disabled) {
+            background: #40a9ff;
+        }
+
+        .login-btn:disabled {
+            background: #d9d9d9;
+            cursor: not-allowed;
         }
 
         .alert {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+            padding: 8px 12px;
             border-radius: 6px;
-            border: none;
-            padding: 0.75rem;
-        }
-
-        .form-label {
-            font-weight: 500;
-            color: #495057;
-            margin-bottom: 0.5rem;
-        }
-
-        .loading {
+            margin-bottom: 16px;
+            font-size: 14px;
             display: none;
         }
 
-        .loading.show {
+        .success-message {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .loading-spinner {
             display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h2>Discord Webhook 管理</h2>
-            <p>请登录以继续</p>
-        </div>
+    <div class="login-card">
+        <div class="logo">Discord Webhook 管理</div>
+        <div class="subtitle">请登录以继续使用</div>
 
-        <div id="loginAlert" class="alert alert-danger" style="display: none;"></div>
+        <div id="alert" class="alert"></div>
+        <div id="success" class="success-message"></div>
 
         <form id="loginForm">
-            <div class="mb-3">
-                <label for="username" class="form-label">用户名</label>
-                <input type="text" class="form-control" id="username" required>
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" class="form-input" required>
             </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">密码</label>
-                <input type="password" class="form-control" id="password" required>
+            
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" class="form-input" required>
             </div>
-            <button type="submit" class="btn btn-primary" id="loginBtn">
-                <span class="loading spinner-border spinner-border-sm me-2"></span>
-                登录
+            
+            <button type="submit" id="loginBtn" class="login-btn">
+                <span id="btnText">登录</span>
             </button>
         </form>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginAlert = document.getElementById('loginAlert');
-        const loading = document.querySelector('.loading');
-
         // 显示错误消息
-        function showError(message) {
-            loginAlert.textContent = message;
-            loginAlert.style.display = 'block';
+        function showAlert(message) {
+            const alert = document.getElementById('alert');
+            const success = document.getElementById('success');
+            success.style.display = 'none';
+            alert.textContent = message;
+            alert.style.display = 'block';
         }
 
-        // 隐藏错误消息
-        function hideError() {
-            loginAlert.style.display = 'none';
+        // 显示成功消息
+        function showSuccess(message) {
+            const alert = document.getElementById('alert');
+            const success = document.getElementById('success');
+            alert.style.display = 'none';
+            success.textContent = message;
+            success.style.display = 'block';
+        }
+
+        // 隐藏所有消息
+        function hideMessages() {
+            document.getElementById('alert').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
         }
 
         // 设置加载状态
-        function setLoading(isLoading) {
-            if (isLoading) {
-                loading.classList.add('show');
-                loginBtn.disabled = true;
+        function setLoading(loading) {
+            const btn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            
+            if (loading) {
+                btn.disabled = true;
+                btnText.innerHTML = '<span class="loading-spinner"></span>登录中...';
             } else {
-                loading.classList.remove('show');
-                loginBtn.disabled = false;
+                btn.disabled = false;
+                btnText.textContent = '登录';
             }
         }
 
-        // 检查是否已登录
-        async function checkAuth() {
-            try {
-                const response = await fetch('/api/user', {
-                    credentials: 'include'
-                });
-                
-                if (response.ok) {
-                    // 已登录，跳转到主页
-                    window.location.href = '/';
-                }
-            } catch (error) {
-                // 未登录，继续显示登录页面
-            }
-        }
-
-        // 登录处理
-        loginForm.addEventListener('submit', async (e) => {
+        // 登录表单提交
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
             if (!username || !password) {
-                showError('请输入用户名和密码');
+                showAlert('请输入用户名和密码');
                 return;
             }
             
-            hideError();
             setLoading(true);
+            hideMessages();
             
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
                     credentials: 'include',
                     body: JSON.stringify({ username, password })
@@ -189,21 +225,31 @@
                 
                 const data = await response.json();
                 
-                if (response.ok) {
-                    // 登录成功，跳转到主页
-                    window.location.href = '/';
+                if (response.ok && data.success) {
+                    showSuccess('登录成功，正在跳转...');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
                 } else {
-                    showError(data.error || '登录失败');
+                    showAlert(data.error || data.message || '登录失败');
                 }
             } catch (error) {
-                showError('网络错误，请重试');
+                console.error('登录错误:', error);
+                showAlert('网络连接失败，请检查网络后重试');
             } finally {
                 setLoading(false);
             }
         });
 
-        // 页面加载时检查登录状态
-        checkAuth();
+        // 自动聚焦用户名输入框
+        document.getElementById('username').focus();
+
+        // 回车键快速登录
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
     </script>
 </body>
 </html> 

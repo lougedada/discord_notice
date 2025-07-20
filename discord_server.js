@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs');
 const session = require('express-session');
 
 const app = express();
-const PORT = process.env.PORT || 16354;
+const PORT = process.env.PORT || 3000;
 
 // 会话配置
 app.use(session({
@@ -240,6 +240,8 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+
+
 // 基础路由 - 需要认证
 app.get('/', (req, res) => {
   // 检查是否已登录
@@ -250,30 +252,43 @@ app.get('/', (req, res) => {
   }
 });
 
-// 静态文件服务 - 只允许访问登录页面相关的资源
+// 静态文件服务配置
+// 公共资源（不需要认证）
+app.use('/css', express.static(path.join(__dirname, 'public', 'css')));
+app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+
+// 需要认证的静态文件
 app.use('/app.js', requireAuth, express.static(path.join(__dirname, 'public', 'app.js')));
 app.use('/index.html', requireAuth, express.static(path.join(__dirname, 'public', 'index.html')));
 
 // 登录API
 app.post('/api/login', async (req, res) => {
   try {
+
     const { username, password } = req.body;
     
     if (!username || !password) {
+
       return res.status(400).json({ error: '用户名和密码不能为空' });
     }
     
     const users = loadUsers();
+
     const user = users.find(u => u.username === username);
     
     if (!user) {
+
       return res.status(401).json({ error: '用户名或密码错误' });
     }
     
     const isValidPassword = bcrypt.compareSync(password, user.password);
     if (!isValidPassword) {
+
       return res.status(401).json({ error: '用户名或密码错误' });
     }
+    
+    
     
     // 创建会话
     req.session.user = {
@@ -413,14 +428,7 @@ app.post('/api/proxy-config', requireAuth, (req, res) => {
     // 更新app.locals中的代理agent
     app.locals.proxyAgent = proxyAgent;
     
-    console.log('代理配置已更新:', {
-      enabled: PROXY_CONFIG.enabled,
-      type: PROXY_CONFIG.type,
-      host: PROXY_CONFIG.host,
-      port: PROXY_CONFIG.port,
-      hasAuth: !!(PROXY_CONFIG.username && PROXY_CONFIG.password),
-      agent: proxyAgent ? '已启用' : '未启用'
-    });
+
     
     res.json({
       success: true,

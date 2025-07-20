@@ -4,367 +4,395 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discord Webhook 管理</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <script src="https://unpkg.com/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.10/plugin/relativeTime.js"></script>
+    <script src="https://unpkg.com/dayjs@1.11.10/plugin/utc.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/antd@5.12.8/dist/antd.min.js"></script>
     <style>
         body {
-            background-color: #f8f9fa;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
         }
 
-        .navbar {
-            background-color: #fff;
-            border-bottom: 1px solid #dee2e6;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        .main-layout {
+            min-height: 100vh;
         }
 
-        .navbar-brand {
+        .header {
+            background: #fff;
+            padding: 0 24px;
+            box-shadow: 0 1px 4px rgba(0,21,41,.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .logo {
+            font-size: 18px;
             font-weight: 600;
-            color: #495057 !important;
+            color: #1890ff;
         }
 
-        .card {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            background: white;
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
-        .card-header {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .btn-primary {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-        }
-
-        .btn-success {
-            background-color: #198754;
-            border-color: #198754;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            border-color: #dc3545;
-        }
-
-        .btn-warning {
-            background-color: #ffc107;
-            border-color: #ffc107;
-            color: #000;
-        }
-
-        .nav-tabs .nav-link {
-            border: none;
-            color: #6c757d;
-            font-weight: 500;
-        }
-
-        .nav-tabs .nav-link.active {
-            background-color: #fff;
-            color: #0d6efd;
-            border-bottom: 2px solid #0d6efd;
+        .content-wrapper {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .stat-card {
             background: white;
-            border: 1px solid #dee2e6;
+            padding: 24px;
             border-radius: 8px;
-            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
         .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #0d6efd;
-            margin-bottom: 0.5rem;
+            font-size: 30px;
+            font-weight: bold;
+            color: #1890ff;
+            margin-bottom: 8px;
         }
 
         .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-tabs {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .card-content {
+            padding: 24px;
         }
 
         .webhook-item {
-            background: white;
-            border: 1px solid #dee2e6;
+            border: 1px solid #f0f0f0;
             border-radius: 8px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            transition: all 0.2s ease;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: white;
         }
 
-        .webhook-item:hover {
-            border-color: #0d6efd;
-            box-shadow: 0 2px 8px rgba(13, 110, 253, 0.1);
+        .webhook-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 12px;
         }
 
-        .webhook-item h6 {
-            color: #495057;
+        .webhook-title {
+            font-size: 16px;
             font-weight: 600;
-            font-size: 1.1rem;
+            margin: 0 0 8px 0;
         }
 
-        .webhook-item .text-muted {
-            font-size: 0.875rem;
-            line-height: 1.4;
+        .webhook-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
         }
 
-        .webhook-item .badge {
-            font-size: 0.75rem;
-            padding: 0.25em 0.5em;
+        .webhook-meta {
+            color: #999;
+            font-size: 12px;
         }
 
-        .webhook-item .btn-sm {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-            border-radius: 4px;
+        .webhook-actions {
+            display: flex;
+            gap: 8px;
         }
 
         .message-item {
-            background: white;
-            border: 1px solid #dee2e6;
+            border: 1px solid #f0f0f0;
             border-radius: 8px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            transition: all 0.2s ease;
-        }
-
-        .message-item:hover {
-            border-color: #0d6efd;
-            box-shadow: 0 2px 8px rgba(13, 110, 253, 0.1);
-        }
-
-        .message-item.failed {
-            border-left: 4px solid #dc3545;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: white;
         }
 
         .message-item.success {
-            border-left: 4px solid #198754;
+            border-left: 4px solid #52c41a;
         }
 
-        .message-item h6 {
-            color: #495057;
-            font-weight: 600;
-            font-size: 1.1rem;
+        .message-item.failed {
+            border-left: 4px solid #ff4d4f;
         }
 
-        .message-item .badge {
-            font-size: 0.75rem;
-            padding: 0.25em 0.5em;
+        .message-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 12px;
         }
 
         .message-preview {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 0.75rem;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            color: #495057;
-            transition: all 0.2s ease;
-        }
-
-        .message-preview:hover {
-            background-color: #e9ecef;
-            border-color: #0d6efd;
-        }
-
-        .message-actions .btn-sm {
-            padding: 0.375rem 0.5rem;
-            font-size: 0.875rem;
+            background: #fafafa;
             border-radius: 4px;
-        }
-
-        .message-actions .btn-sm i {
-            font-size: 0.875rem;
-        }
-
-        .form-control, .form-select {
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-
-        .badge {
-            font-size: 0.8rem;
+            padding: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
         }
 
         .empty-state {
             text-align: center;
-            padding: 3rem 1rem;
-            color: #6c757d;
-        }
-
-        .empty-state h5 {
-            color: #495057;
-            margin-bottom: 1rem;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: #6c757d;
+            padding: 40px;
+            color: #999;
         }
 
         .file-upload-area {
-            border: 2px dashed #ced4da;
+            border: 2px dashed #d9d9d9;
             border-radius: 8px;
-            padding: 2rem;
+            padding: 40px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: border-color 0.3s;
         }
 
         .file-upload-area:hover {
-            border-color: #0d6efd;
-            background-color: #f8f9ff;
+            border-color: #1890ff;
         }
 
         .file-upload-area.dragover {
-            border-color: #0d6efd;
-            background-color: #f0f8ff;
+            border-color: #1890ff;
+            background: #f0f9ff;
         }
 
-        /* 消息预览样式 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .ant-btn {
+            border-radius: 6px;
+        }
+
+        .ant-input, .ant-select, .ant-textarea {
+            border-radius: 6px;
+        }
+
+        /* 确保Ant Design组件正确显示 */
+        .ant-message {
+            z-index: 9999 !important;
+            position: fixed !important;
+            top: 24px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+        }
+
+        .ant-message-notice {
+            z-index: 9999 !important;
+        }
+
+        .ant-notification {
+            z-index: 9999 !important;
+        }
+
+        /* 自定义模态框样式 */
+        .ant-modal-mask {
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        .ant-modal {
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .ant-modal-close:hover {
+            background-color: rgba(0, 0, 0, 0.06);
+            border-radius: 4px;
+        }
+
+        .ant-btn:focus,
+        .ant-input:focus,
+        .ant-select:focus {
+            border-color: #40a9ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            outline: none;
+        }
+
+        .ant-btn:hover {
+            opacity: 1;
+            filter: brightness(1.1);
+        }
+
+        .ant-btn-danger:hover {
+            background: #ff7875 !important;
+            border-color: #ff7875 !important;
+        }
+
+        .ant-btn-primary:hover {
+            background: #40a9ff !important;
+            border-color: #40a9ff !important;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                transform: translateX(-50%) translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutUp {
+            from {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-50%) translateY(-100%);
+                opacity: 0;
+            }
+        }
+
+        .side-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .side-panel h3 {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
         .discord-message-content {
             line-height: 1.5;
-            word-wrap: break-word;
-        }
-
-        .discord-message-content pre {
-            background-color: #2f3136 !important;
-            color: #dcddde !important;
-            padding: 8px 12px !important;
-            border-radius: 4px !important;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-            font-size: 0.875rem !important;
-            overflow-x: auto;
-            margin: 4px 0 !important;
         }
 
         .discord-message-content code {
-            background-color: #f1f3f4 !important;
-            color: #eb459e !important;
-            padding: 2px 4px !important;
-            border-radius: 3px !important;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-            font-size: 0.875rem !important;
+            background: #f6f8fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .discord-message-content pre {
+            background: #f6f8fa;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
         }
 
         .discord-message-content blockquote {
-            margin: 4px 0 !important;
-            padding-left: 12px !important;
-            border-left: 4px solid #4f545c !important;
-            background-color: rgba(79, 84, 92, 0.1);
-            border-radius: 0 4px 4px 0;
-        }
-
-        .discord-message-content ul {
-            padding-left: 20px !important;
-            margin: 4px 0 !important;
-        }
-
-        .discord-message-content li {
-            margin: 2px 0 !important;
-        }
-
-        .discord-message-content hr {
-            border: none !important;
-            height: 1px !important;
-            background-color: #4f545c !important;
-            margin: 8px 0 !important;
-        }
-
-        .discord-message-content a {
-            color: #00b0f4 !important;
-            text-decoration: none !important;
-        }
-
-        .discord-message-content a:hover {
-            text-decoration: underline !important;
+            border-left: 4px solid #d0d7de;
+            margin: 0;
+            padding-left: 16px;
+            color: #656d76;
         }
 
         .discord-message-content strong {
-            font-weight: 600 !important;
+            font-weight: 600;
         }
 
         .discord-message-content em {
-            font-style: italic !important;
+            font-style: italic;
         }
 
-        .discord-message-content u {
-            text-decoration: underline !important;
+        .user-menu a:hover {
+            background: #f5f5f5;
         }
 
-        .discord-message-content del {
-            text-decoration: line-through !important;
-        }
-
-        .discord-message-content h3,
-        .discord-message-content h4,
-        .discord-message-content h5 {
-            font-weight: 600 !important;
-            margin-top: 8px !important;
-            margin-bottom: 4px !important;
-        }
-
-        /* 消息预览区域样式 */
-        #messagePreview {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 16px;
-        }
-
-        #messagePreview h6 {
-            color: #495057;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
+        #userDropdown:hover {
+            background: #f5f5f5;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="#">Discord Webhook 管理</a>
-            <div class="navbar-nav ms-auto">
-                <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                        <span id="currentUser">用户</span>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">修改密码</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
-                    </ul>
+    <nav class="header">
+        <div class="logo">Discord Webhook 管理</div>
+        <div class="user-info">
+            <span id="currentUser" style="color: #666; margin-right: 16px;">用户</span>
+            <span id="currentTime" style="color: #666; margin-right: 16px;"></span>
+            <div class="user-dropdown" style="position: relative;">
+                <button id="userDropdown" onclick="toggleUserMenu()" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 4px; color: #666; font-size: 20px; display: flex; align-items: center;">
+                    👤
+                </button>
+                <div id="userMenu" class="user-menu" style="display: none; position: absolute; right: 0; top: 100%; background: white; border: 1px solid #f0f0f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); min-width: 120px; z-index: 1000;">
+                    <a href="#" onclick="showChangePasswordModal()" style="display: block; padding: 12px 16px; color: #333; text-decoration: none; border-bottom: 1px solid #f0f0f0;">修改密码</a>
+                    <a href="#" id="logoutBtn" style="display: block; padding: 12px 16px; color: #333; text-decoration: none;">退出登录</a>
                 </div>
-                <span class="navbar-text ms-3">
-                    <span id="currentTime"></span>
-                </span>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="content-wrapper">
         <!-- 统计卡片 -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -386,58 +414,52 @@
         </div>
 
         <!-- 主要内容 -->
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <ul class="nav nav-tabs card-header-tabs" id="mainTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="webhooks-tab" data-bs-toggle="tab" data-bs-target="#webhooks" type="button" role="tab">
-                                    Webhook管理
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="send-tab" data-bs-toggle="tab" data-bs-target="#send" type="button" role="tab">
-                                    发送消息
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
-                                    消息历史
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="card-body">
-                        <div class="tab-content" id="mainTabsContent">
-                            <!-- Webhook管理 -->
-                            <div class="tab-pane fade show active" id="webhooks" role="tabpanel">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5>Webhook列表</h5>
-                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addWebhookModal">
-                                        添加Webhook
-                                    </button>
-                                </div>
-                                <div id="webhooksList" class="loading">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">加载中...</span>
-                                    </div>
-                                    <p class="mt-2">正在加载...</p>
-                                </div>
-                            </div>
+        <div style="display: flex; gap: 24px; align-items: flex-start;">
+            <div style="flex: 1; max-width: 800px;">
+                <div class="main-card">
+                                         <div class="card-tabs">
+                         <div style="display: flex; border-bottom: 1px solid #f0f0f0; background: white;">
+                             <button class="tab-button active" onclick="switchTab('webhooks')" style="padding: 12px 24px; border: none; background: none; cursor: pointer; border-bottom: 2px solid #1890ff; color: #1890ff; font-weight: 500;">
+                                 Webhook管理
+                             </button>
+                             <button class="tab-button" onclick="switchTab('send')" style="padding: 12px 24px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: #666; font-weight: 500;">
+                                 发送消息
+                             </button>
+                             <button class="tab-button" onclick="switchTab('history')" style="padding: 12px 24px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; color: #666; font-weight: 500;">
+                                 消息历史
+                             </button>
+                         </div>
+                     </div>
+                    <div class="card-content">
+                                                 <div class="tab-content">
+                             <!-- Webhook管理 -->
+                             <div class="tab-pane active" id="webhooks">
+                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                     <h5 style="margin: 0;">Webhook列表</h5>
+                                     <button class="ant-btn ant-btn-primary" id="addWebhookBtn" style="background: #1890ff; border-color: #1890ff; color: white; height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #1890ff; cursor: pointer;">
+                                         添加Webhook
+                                     </button>
+                                 </div>
+                                 <div id="webhooksList" class="loading">
+                                     <div style="display: flex; justify-content: center; align-items: center; padding: 40px;">
+                                         <div style="width: 16px; height: 16px; border: 2px solid #1890ff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                         <span style="margin-left: 8px; color: #666;">加载中...</span>
+                                     </div>
+                                 </div>
+                             </div>
 
                             <!-- 发送消息 -->
-                            <div class="tab-pane fade" id="send" role="tabpanel">
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label for="sendWebhookSelect" class="form-label">选择Webhook</label>
-                                        <select class="form-select" id="sendWebhookSelect">
+                            <div class="tab-pane" id="send" style="display: none;">
+                                <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                                    <div style="flex: 1;">
+                                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">选择Webhook</label>
+                                        <select class="ant-select" id="sendWebhookSelect" style="width: 100%; height: 32px; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 6px; background: white;">
                                             <option value="">请选择Webhook</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label for="messageType" class="form-label">消息类型</label>
-                                        <select class="form-select" id="messageType">
+                                    <div style="flex: 1;">
+                                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">消息类型</label>
+                                        <select class="ant-select" id="messageType" style="width: 100%; height: 32px; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 6px; background: white;">
                                             <option value="text">文本消息</option>
                                             <option value="embed">嵌入消息</option>
                                             <option value="file">文件消息</option>
@@ -447,21 +469,21 @@
 
                                 <!-- 文本消息表单 -->
                                 <div id="textMessageForm">
-                                    <div class="mb-3">
-                                        <label for="messageContent" class="form-label">消息内容</label>
-                                        <textarea class="form-control" id="messageContent" rows="4" placeholder="输入消息内容..."></textarea>
+                                    <div style="margin-bottom: 16px;">
+                                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">消息内容</label>
+                                        <textarea class="ant-input" id="messageContent" rows="4" placeholder="输入消息内容..." style="width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; resize: vertical;"></textarea>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="messageUsername" class="form-label">用户名（可选）</label>
-                                                <input type="text" class="form-control" id="messageUsername" placeholder="自定义用户名">
+                                    <div style="display: flex; gap: 16px;">
+                                        <div style="flex: 1;">
+                                            <div style="margin-bottom: 16px;">
+                                                <label style="display: block; margin-bottom: 4px; font-weight: 500;">用户名（可选）</label>
+                                                <input type="text" class="ant-input" id="messageUsername" placeholder="自定义用户名" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;">
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="messageAvatar" class="form-label">头像URL（可选）</label>
-                                                <input type="url" class="form-control" id="messageAvatar" placeholder="https://example.com/avatar.png">
+                                        <div style="flex: 1;">
+                                            <div style="margin-bottom: 16px;">
+                                                <label style="display: block; margin-bottom: 4px; font-weight: 500;">头像URL（可选）</label>
+                                                <input type="url" class="ant-input" id="messageAvatar" placeholder="https://example.com/avatar.png" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;">
                                             </div>
                                         </div>
                                     </div>
@@ -469,25 +491,25 @@
 
                                 <!-- 嵌入消息表单 -->
                                 <div id="embedMessageForm" style="display: none;">
-                                    <div class="mb-3">
-                                        <label for="embedTitle" class="form-label">标题</label>
-                                        <input type="text" class="form-control" id="embedTitle" placeholder="嵌入消息标题">
+                                    <div style="margin-bottom: 16px;">
+                                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">标题</label>
+                                        <input type="text" class="ant-input" id="embedTitle" placeholder="嵌入消息标题" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;">
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="embedDescription" class="form-label">描述</label>
-                                        <textarea class="form-control" id="embedDescription" rows="3" placeholder="嵌入消息描述"></textarea>
+                                    <div style="margin-bottom: 16px;">
+                                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">描述</label>
+                                        <textarea class="ant-input" id="embedDescription" rows="3" placeholder="嵌入消息描述" style="width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; resize: vertical;"></textarea>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="embedColor" class="form-label">颜色</label>
-                                                <input type="color" class="form-control form-control-color" id="embedColor" value="#0d6efd">
+                                    <div style="display: flex; gap: 16px;">
+                                        <div style="flex: 1;">
+                                            <div style="margin-bottom: 16px;">
+                                                <label style="display: block; margin-bottom: 4px; font-weight: 500;">颜色</label>
+                                                <input type="color" class="ant-input" id="embedColor" value="#1890ff" style="width: 100%; height: 32px; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 6px;">
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="embedAuthor" class="form-label">作者</label>
-                                                <input type="text" class="form-control" id="embedAuthor" placeholder="作者名称">
+                                        <div style="flex: 1;">
+                                            <div style="margin-bottom: 16px;">
+                                                <label style="display: block; margin-bottom: 4px; font-weight: 500;">作者</label>
+                                                <input type="text" class="ant-input" id="embedAuthor" placeholder="作者名称" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;">
                                             </div>
                                         </div>
                                     </div>
@@ -495,54 +517,54 @@
 
                                 <!-- 文件消息表单 -->
                                 <div id="fileMessageForm" style="display: none;">
-                                    <div class="mb-3">
-                                        <label for="fileUpload" class="form-label">选择文件</label>
+                                    <div style="margin-bottom: 16px;">
+                                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">选择文件</label>
                                         <div class="file-upload-area" id="fileUploadArea">
-                                            <p class="mb-2">点击或拖拽文件到这里</p>
-                                            <small class="text-muted">最大文件大小: 8MB</small>
-                                            <input type="file" class="form-control" id="fileUpload" style="display: none;">
+                                            <p style="margin-bottom: 8px; color: #666;">点击或拖拽文件到这里</p>
+                                            <small style="color: #999;">最大文件大小: 8MB</small>
+                                            <input type="file" id="fileUpload" style="display: none;">
                                         </div>
-                                        <div id="fileInfo" class="mt-2" style="display: none;">
-                                            <div class="alert alert-info">
+                                        <div id="fileInfo" style="margin-top: 8px; display: none;">
+                                            <div style="background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 6px; padding: 12px; position: relative;">
                                                 <span id="fileName"></span>
-                                                <button type="button" class="btn-close float-end" id="removeFile"></button>
+                                                <button type="button" id="removeFile" style="position: absolute; right: 8px; top: 8px; background: none; border: none; font-size: 16px; cursor: pointer; color: #666;">×</button>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="fileContent" class="form-label">文件说明（可选）</label>
-                                        <textarea class="form-control" id="fileContent" rows="3" placeholder="文件说明文字..."></textarea>
+                                    <div style="margin-bottom: 16px;">
+                                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">文件说明（可选）</label>
+                                        <textarea class="ant-input" id="fileContent" rows="3" placeholder="文件说明文字..." style="width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; resize: vertical;"></textarea>
                                     </div>
                                 </div>
 
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-success" id="sendMessageBtn">发送消息</button>
-                                    <button class="btn btn-secondary" id="previewMessageBtn">预览</button>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="ant-btn ant-btn-primary" id="sendMessageBtn" style="background: #52c41a; border-color: #52c41a; color: white; height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #52c41a; cursor: pointer;">发送消息</button>
+                                    <button class="ant-btn ant-btn-default" id="previewMessageBtn" style="background: #fff; border-color: #d9d9d9; color: rgba(0, 0, 0, 0.85); height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #d9d9d9; cursor: pointer;">预览</button>
                                 </div>
 
                                 <!-- 消息预览 -->
-                                <div id="messagePreview" class="mt-3 p-3 bg-light border rounded" style="display: none;">
-                                    <h6>消息预览</h6>
+                                <div id="messagePreview" style="display: none; margin-top: 16px; padding: 16px; background: #fafafa; border: 1px solid #f0f0f0; border-radius: 8px;">
+                                    <h6 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">消息预览</h6>
                                     <div id="previewContent"></div>
                                 </div>
                             </div>
 
                             <!-- 消息历史 -->
-                            <div class="tab-pane fade" id="history" role="tabpanel">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5>消息历史</h5>
-                                    <div class="d-flex gap-2">
-                                        <select class="form-select" id="historyWebhookFilter" style="width: auto;">
+                            <div class="tab-pane" id="history" style="display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                    <h5 style="margin: 0;">消息历史</h5>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <select class="ant-select" id="historyWebhookFilter" style="width: 150px; height: 32px; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 6px; background: white;">
                                             <option value="">所有Webhook</option>
                                         </select>
-                                        <button class="btn btn-warning" id="clearHistoryBtn">清除历史</button>
+                                        <button class="ant-btn ant-btn-danger" id="clearHistoryBtn" style="background: #ff4d4f; border-color: #ff4d4f; color: white; height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #ff4d4f; cursor: pointer;">清除历史</button>
                                     </div>
                                 </div>
                                 <div id="messageHistory" class="loading">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">加载中...</span>
+                                    <div style="display: flex; justify-content: center; align-items: center; padding: 40px;">
+                                        <div style="width: 16px; height: 16px; border: 2px solid #1890ff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                        <span style="margin-left: 8px; color: #666;">加载中...</span>
                                     </div>
-                                    <p class="mt-2">正在加载...</p>
                                 </div>
                             </div>
                         </div>
@@ -550,225 +572,367 @@
                 </div>
             </div>
 
-            <div class="col-lg-4">
+            <div style="width: 300px; flex-shrink: 0;">
                 <!-- 快速操作 -->
-                <div class="card mb-3">
-                    <div class="card-header">快速操作</div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary" id="quickTestBtn">测试所有Webhook</button>
-                            <button class="btn btn-success" id="refreshStatsBtn">刷新统计</button>
-                            <button class="btn btn-secondary" id="exportDataBtn">导出数据</button>
-                        </div>
-                    </div>
+                <div class="side-panel">
+                    <h3>快速操作</h3>
+                                                                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                          <button class="ant-btn ant-btn-primary" id="quickTestBtn" style="background: #1890ff; border-color: #1890ff; color: white; height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #1890ff; cursor: pointer;">测试所有Webhook</button>
+                          <button class="ant-btn ant-btn-success" id="refreshStatsBtn" style="background: #52c41a; border-color: #52c41a; color: white; height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #52c41a; cursor: pointer;">刷新统计</button>
+                          <button class="ant-btn ant-btn-default" id="exportDataBtn" style="background: #fff; border-color: #d9d9d9; color: rgba(0, 0, 0, 0.85); height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #d9d9d9; cursor: pointer;">导出数据</button>
+
+                       </div>
                 </div>
 
                 <!-- 代理设置 -->
-                <div class="card mb-3">
-                    <div class="card-header">代理设置</div>
-                    <div class="card-body">
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="proxyEnabled" checked>
-                            <label class="form-check-label" for="proxyEnabled">启用代理</label>
-                        </div>
-                        
-                        <div id="proxySettings">
-                            <div class="mb-3">
-                                <label for="proxyType" class="form-label">代理类型</label>
-                                <select class="form-select" id="proxyType">
-                                    <option value="http">HTTP</option>
-                                    <option value="https">HTTPS</option>
-                                    <option value="socks4">SOCKS4</option>
-                                    <option value="socks5">SOCKS5</option>
-                                </select>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-8">
-                                    <div class="mb-3">
-                                        <label for="proxyHost" class="form-label">主机</label>
-                                        <input type="text" class="form-control" id="proxyHost" placeholder="127.0.0.1">
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="mb-3">
-                                        <label for="proxyPort" class="form-label">端口</label>
-                                        <input type="number" class="form-control" id="proxyPort" placeholder="7890">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">认证（可选）</label>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <input type="text" class="form-control" id="proxyUsername" placeholder="用户名">
-                                    </div>
-                                    <div class="col-6">
-                                        <input type="password" class="form-control" id="proxyPassword" placeholder="密码">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="proxyUrl" class="form-label">完整URL（可选，优先级最高）</label>
-                                <input type="text" class="form-control" id="proxyUrl" placeholder="http://user:pass@127.0.0.1:7890">
-                                <div class="form-text">如果提供完整URL，将忽略上面的单独配置</div>
-                            </div>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary" id="saveProxyBtn">保存配置</button>
-                            <button class="btn btn-success" id="testProxyBtn">测试连接</button>
-                            <small class="text-muted">状态: <span id="proxyStatus">检查中...</span></small>
-                        </div>
-                    </div>
+                <div class="side-panel">
+                    <h3>代理设置</h3>
+                                         <div style="margin-bottom: 16px;">
+                         <label style="display: flex; align-items: center; cursor: pointer;">
+                             <input type="checkbox" id="proxyEnabled" checked style="margin-right: 8px;">
+                             启用代理
+                         </label>
+                     </div>
+                     
+                     <div id="proxySettings">
+                         <div style="margin-bottom: 16px;">
+                             <label style="display: block; margin-bottom: 4px; font-weight: 500;">代理类型</label>
+                             <select class="ant-select" id="proxyType" style="width: 100%; height: 32px; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 6px; background: white;">
+                                 <option value="http">HTTP</option>
+                                 <option value="https">HTTPS</option>
+                                 <option value="socks4">SOCKS4</option>
+                                 <option value="socks5">SOCKS5</option>
+                             </select>
+                         </div>
+                         
+                         <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                             <div style="flex: 2;">
+                                 <label style="display: block; margin-bottom: 4px; font-weight: 500;">主机</label>
+                                 <input type="text" class="ant-input" id="proxyHost" placeholder="127.0.0.1" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                             </div>
+                             <div style="flex: 1;">
+                                 <label style="display: block; margin-bottom: 4px; font-weight: 500;">端口</label>
+                                 <input type="number" class="ant-input" id="proxyPort" placeholder="7890" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                             </div>
+                         </div>
+                         
+                         <div style="margin-bottom: 16px;">
+                             <label style="display: block; margin-bottom: 4px; font-weight: 500;">认证（可选）</label>
+                             <div style="display: flex; gap: 8px;">
+                                 <input type="text" class="ant-input" id="proxyUsername" placeholder="用户名" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                                 <input type="password" class="ant-input" id="proxyPassword" placeholder="密码" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                             </div>
+                         </div>
+                         
+                         <div style="margin-bottom: 16px;">
+                             <label style="display: block; margin-bottom: 4px; font-weight: 500;">完整URL（可选，优先级最高）</label>
+                             <input type="text" class="ant-input" id="proxyUrl" placeholder="http://user:pass@127.0.0.1:7890" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                             <div style="font-size: 12px; color: #999; margin-top: 4px;">如果提供完整URL，将忽略上面的单独配置</div>
+                         </div>
+                     </div>
+                    
+                                         <div style="display: flex; flex-direction: column; gap: 8px;">
+                         <button class="ant-btn ant-btn-primary" id="saveProxyBtn" style="background: #1890ff; border-color: #1890ff; color: white; height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #1890ff; cursor: pointer;">保存配置</button>
+                         <button class="ant-btn ant-btn-success" id="testProxyBtn" style="background: #52c41a; border-color: #52c41a; color: white; height: 32px; padding: 4px 15px; border-radius: 6px; border: 1px solid #52c41a; cursor: pointer;">测试连接</button>
+                         <small style="color: #999; text-align: center;">状态: <span id="proxyStatus">检查中...</span></small>
+                     </div>
                 </div>
 
                 <!-- 系统状态 -->
-                <div class="card">
-                    <div class="card-header">系统状态</div>
-                    <div class="card-body text-center">
-                        <div class="mb-2">
-                            <span class="badge bg-success">运行中</span>
+                <div class="side-panel">
+                    <h3>系统状态</h3>
+                    <div style="text-align: center;">
+                        <div style="margin-bottom: 8px;">
+                            <span style="background: #52c41a; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">运行中</span>
                         </div>
-                        <small class="text-muted">Discord Webhook 管理系统</small>
+                        <small style="color: #999;">Discord Webhook 管理系统</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 添加Webhook模态框 -->
-    <div class="modal fade" id="addWebhookModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">添加Webhook</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addWebhookForm">
-                        <div class="mb-3">
-                            <label for="webhookName" class="form-label">名称</label>
-                            <input type="text" class="form-control" id="webhookName" required>
+    <!-- 模态框容器 -->
+    <div id="modal-container"></div>
+
+    <!-- 消息提示容器 -->
+    <div id="message-container"></div>
+
+    <script>
+                // 等待页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化dayjs插件
+            if (typeof dayjs !== 'undefined') {
+                dayjs.extend(dayjs_plugin_relativeTime);
+                dayjs.extend(dayjs_plugin_utc);
+            }
+        });
+
+        // 等待antd加载完成
+        function initAntd() {
+            if (typeof antd !== 'undefined') {
+                // 解构Ant Design组件
+                const { message, Button, Input, Select, Form, Tabs, Table, Tag, Space, Dropdown, Menu } = antd;
+                
+                // 配置原生message组件
+                message.config({
+                    top: 24,
+                    duration: 3,
+                    maxCount: 3,
+                    getContainer: () => document.body,
+                });
+                
+                // 设置全局变量 - 使用原生Ant Design组件
+                window.message = message;
+                window.Button = Button;
+                window.Input = Input;
+                window.Select = Select;
+                window.Form = Form;
+                window.Tabs = Tabs;
+                window.Table = Table;
+                window.Tag = Tag;
+                window.Space = Space;
+                window.Dropdown = Dropdown;
+                window.Menu = Menu;
+                
+                // 使用自定义Modal替换原生Modal
+                window.Modal = {
+                    confirm: function(config) { showCustomModal(config); },
+                    info: function(config) { showCustomModal({...config, type: 'info'}); }
+                };
+                
+                                // 设置全局标记，表示组件已初始化
+                window.antdReady = true;
+                
+                // 触发自定义事件，通知app.js组件已就绪
+                window.dispatchEvent(new CustomEvent('antdReady'));
+            } else {
+                setTimeout(initAntd, 200);
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initAntd);
+        
+        
+
+        // 标签页切换函数
+        function switchTab(tabName) {
+            // 隐藏所有标签页内容
+            const tabs = document.querySelectorAll('.tab-pane');
+            tabs.forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // 显示选中的标签页
+            document.getElementById(tabName).style.display = 'block';
+            
+            // 更新标签按钮样式
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                button.style.borderBottom = '2px solid transparent';
+                button.style.color = '#666';
+                button.classList.remove('active');
+            });
+            
+            // 激活当前标签按钮
+            event.target.style.borderBottom = '2px solid #1890ff';
+            event.target.style.color = '#1890ff';
+            event.target.classList.add('active');
+        }
+
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 点击其他地方关闭用户菜单
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.user-dropdown');
+            if (!dropdown.contains(event.target)) {
+                document.getElementById('userMenu').style.display = 'none';
+            }
+        });
+
+                 // 显示修改密码模态框
+         function showChangePasswordModal() {
+             document.getElementById('userMenu').style.display = 'none';
+             
+             // 如果组件还未初始化，使用原生方法
+             if (!window.antdReady || typeof window.Modal === 'undefined' || !window.Modal) {
+                 const currentPassword = prompt('请输入当前密码:');
+                 if (!currentPassword) return;
+                 
+                 const newPassword = prompt('请输入新密码（至少6位）:');
+                 if (!newPassword || newPassword.length < 6) {
+                     alert('新密码长度至少6位');
+                     return;
+                 }
+                 
+                 const confirmPassword = prompt('请确认新密码:');
+                 if (newPassword !== confirmPassword) {
+                     alert('两次输入的密码不一致');
+                     return;
+                 }
+                 
+                 // 模拟表单数据
+                 const form = document.createElement('div');
+                 form.innerHTML = `
+                     <input type="hidden" id="currentPassword" value="${currentPassword}">
+                     <input type="hidden" id="newPassword" value="${newPassword}">
+                     <input type="hidden" id="confirmPassword" value="${confirmPassword}">
+                 `;
+                 document.body.appendChild(form);
+                 
+                 changePassword().finally(() => {
+                     document.body.removeChild(form);
+                 });
+                 
+                 return;
+             }
+             
+             window.Modal.confirm({
+                title: '修改密码',
+                width: 500,
+                content: `
+                    <form id="changePasswordForm" style="margin-top: 16px;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 4px; font-weight: 500;">当前密码</label>
+                            <input type="password" class="ant-input" id="currentPassword" required style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;" placeholder="请输入当前密码">
                         </div>
-                        <div class="mb-3">
-                            <label for="webhookUrl" class="form-label">Webhook URL</label>
-                            <input type="url" class="form-control" id="webhookUrl" required 
-                                   placeholder="https://discord.com/api/webhooks/...">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 4px; font-weight: 500;">新密码</label>
+                            <input type="password" class="ant-input" id="newPassword" required minlength="6" style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;" placeholder="请输入新密码（至少6位）">
                         </div>
-                        <div class="mb-3">
-                            <label for="webhookDescription" class="form-label">描述（可选）</label>
-                            <textarea class="form-control" id="webhookDescription" rows="2"></textarea>
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 4px; font-weight: 500;">确认新密码</label>
+                            <input type="password" class="ant-input" id="confirmPassword" required style="width: 100%; height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;" placeholder="请再次输入新密码">
                         </div>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="saveWebhookBtn">保存</button>
-                </div>
-            </div>
-        </div>
-    </div>
+                `,
+                okText: '保存',
+                cancelText: '取消',
+                                 onOk: changePassword
+             });
+         }
 
-    <!-- 编辑Webhook模态框 -->
-    <div class="modal fade" id="editWebhookModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">编辑Webhook</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editWebhookForm">
-                        <input type="hidden" id="editWebhookId">
-                        <div class="mb-3">
-                            <label for="editWebhookName" class="form-label">名称</label>
-                            <input type="text" class="form-control" id="editWebhookName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editWebhookUrl" class="form-label">Webhook URL</label>
-                            <input type="url" class="form-control" id="editWebhookUrl" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editWebhookDescription" class="form-label">描述</label>
-                            <textarea class="form-control" id="editWebhookDescription" rows="2"></textarea>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="editWebhookActive">
-                            <label class="form-check-label" for="editWebhookActive">启用此Webhook</label>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="updateWebhookBtn">更新</button>
-                </div>
-            </div>
-        </div>
-    </div>
+         // 自定义Toast实现
+         function showCustomToast(msg, type = 'info') {
+             const toast = document.createElement('div');
+             const colors = {
+                 success: { bg: '#f6ffed', border: '#b7eb8f', text: '#52c41a' },
+                 error: { bg: '#fff2f0', border: '#ffccc7', text: '#ff4d4f' },
+                 warning: { bg: '#fffbe6', border: '#ffe58f', text: '#faad14' },
+                 info: { bg: '#e6f7ff', border: '#91d5ff', text: '#1890ff' }
+             };
+             
+             const color = colors[type] || colors.info;
+             
+             toast.style.cssText = `
+                 position: fixed;
+                 top: 24px;
+                 left: 50%;
+                 transform: translateX(-50%);
+                 background: ${color.bg};
+                 border: 1px solid ${color.border};
+                 color: ${color.text};
+                 padding: 12px 16px;
+                 border-radius: 6px;
+                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                 z-index: 10000;
+                 font-size: 14px;
+                 max-width: 300px;
+                 animation: slideInDown 0.3s ease-out;
+             `;
+             
+             toast.textContent = msg;
+             document.body.appendChild(toast);
+             
+             setTimeout(() => {
+                 toast.style.animation = 'slideOutUp 0.3s ease-in';
+                 setTimeout(() => {
+                     if (document.body.contains(toast)) {
+                         document.body.removeChild(toast);
+                     }
+                 }, 300);
+             }, 3000);
+         }
+         
+         // 自定义Modal实现
+         function showCustomModal(config) {
+             const modalContainer = document.createElement('div');
+             const isInfo = config.type === 'info';
+             
+             modalContainer.innerHTML = `
+                 <div class="ant-modal-mask" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); z-index: 1000; animation: modalFadeIn 0.2s ease-out;"></div>
+                 <div class="ant-modal-wrap" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                     <div class="ant-modal" style="width: ${config.width || 520}px; background: white; border-radius: 8px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); position: relative; animation: modalSlideIn 0.3s ease-out; max-height: 80vh; overflow-y: auto;">
+                         <div class="ant-modal-content">
+                             <div class="ant-modal-header" style="padding: 16px 24px; border-bottom: 1px solid #f0f0f0;">
+                                 <div class="ant-modal-title" style="font-size: 16px; font-weight: 600; color: rgba(0, 0, 0, 0.85);">${config.title || '提示'}</div>
+                                 <button class="ant-modal-close" id="closeModalBtn" style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 16px; cursor: pointer; padding: 8px; color: rgba(0, 0, 0, 0.45);">×</button>
+                             </div>
+                             <div class="ant-modal-body" style="padding: 24px; max-height: 60vh; overflow-y: auto;">
+                                 ${config.content || ''}
+                             </div>
+                             <div class="ant-modal-footer" style="padding: 10px 16px; text-align: right; border-top: 1px solid #f0f0f0;">
+                                 ${isInfo ? 
+                                     `<button class="ant-btn ant-btn-primary" id="okBtn" style="height: 32px; padding: 4px 15px; border: 1px solid #1890ff; border-radius: 6px; background: #1890ff; color: white; cursor: pointer;">${config.okText || '确定'}</button>` :
+                                     `<button class="ant-btn" id="cancelBtn" style="margin-right: 8px; height: 32px; padding: 4px 15px; border: 1px solid #d9d9d9; border-radius: 6px; background: white; color: rgba(0, 0, 0, 0.85); cursor: pointer;">${config.cancelText || '取消'}</button>
+                                      <button class="ant-btn ant-btn-primary" id="okBtn" style="height: 32px; padding: 4px 15px; border: 1px solid #1890ff; border-radius: 6px; background: #1890ff; color: white; cursor: pointer;">${config.okText || '确定'}</button>`
+                                 }
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             `;
 
-    <!-- 消息详情模态框 -->
-    <div class="modal fade" id="messageDetailModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">消息详情</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="messageDetailContent"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+             // 添加到页面
+             document.body.appendChild(modalContainer);
 
-    <!-- 修改密码模态框 -->
-    <div class="modal fade" id="changePasswordModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">修改密码</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="changePasswordForm">
-                        <div class="mb-3">
-                            <label for="currentPassword" class="form-label">当前密码</label>
-                            <input type="password" class="form-control" id="currentPassword" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="newPassword" class="form-label">新密码</label>
-                            <input type="password" class="form-control" id="newPassword" required minlength="6">
-                            <div class="form-text">密码长度至少6位</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="confirmPassword" class="form-label">确认新密码</label>
-                            <input type="password" class="form-control" id="confirmPassword" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="savePasswordBtn">保存</button>
-                </div>
-            </div>
-        </div>
-    </div>
+             // 绑定事件
+             const closeModal = () => {
+                 if (document.body.contains(modalContainer)) {
+                     document.body.removeChild(modalContainer);
+                 }
+             };
 
-    <!-- 提示消息 -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="globalToast" class="toast" role="alert">
-            <div class="toast-header">
-                <strong class="me-auto">提示</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-            </div>
-            <div class="toast-body"></div>
-        </div>
-    </div>
+             const closeBtn = modalContainer.querySelector('#closeModalBtn');
+             const cancelBtn = modalContainer.querySelector('#cancelBtn');
+             const okBtn = modalContainer.querySelector('#okBtn');
+             const mask = modalContainer.querySelector('.ant-modal-mask');
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+             if (closeBtn) closeBtn.addEventListener('click', closeModal);
+             if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+             if (mask) mask.addEventListener('click', closeModal);
+             
+             if (okBtn) {
+                 okBtn.addEventListener('click', async () => {
+                     if (config.onOk) {
+                         try {
+                             await config.onOk();
+                         } catch (error) {
+                             console.error('Modal onOk error:', error);
+                         }
+                     }
+                     closeModal();
+                 });
+             }
+         }
+         
+         // 显示提示消息 - 优先使用自定义toast确保位置正确
+         function showToast(msg, type = 'info') {
+             // 优先使用自定义toast，因为位置更可控
+             showCustomToast(msg, type);
+         }
+         
+         // 设为全局函数
+         window.showToast = showToast;
+         window.showCustomToast = showCustomToast;
+
+
+    </script>
     <script src="app.js"></script>
 </body>
 </html> 

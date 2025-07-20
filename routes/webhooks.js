@@ -75,9 +75,7 @@ router.post('/', async (req, res) => {
 
     // 测试Webhook是否有效
     try {
-      console.log('正在验证Webhook:', webhookUrl);
       const testResponse = await axiosInstance.get(webhookUrl);
-      console.log('Webhook验证成功:', testResponse.data.id);
       
       if (!testResponse.data.id) {
         return res.status(400).json({ error: 'Webhook无效或已失效' });
@@ -135,7 +133,6 @@ router.put('/:id', async (req, res) => {
       const axiosInstance = createAxiosInstance(req);
 
       try {
-        console.log('正在验证更新的Webhook:', webhookUrl);
         const testResponse = await axiosInstance.get(webhookUrl);
         if (!testResponse.data.id) {
           return res.status(400).json({ error: 'Webhook无效或已失效' });
@@ -206,9 +203,7 @@ router.post('/:id/test', async (req, res) => {
       avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png'
     };
 
-    console.log('正在发送测试消息到:', webhook.webhookUrl);
     const response = await axiosInstance.post(webhook.webhookUrl, testMessage);
-    console.log('测试消息发送成功');
     
     res.json({ 
       success: true, 
